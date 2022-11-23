@@ -4,14 +4,15 @@ using System.Security.Cryptography;
 namespace ConsoleTestCV {
     internal class Program {
         static void Main(string[] args) {
-            VideoCapture capture = new VideoCapture(0);
+            using VideoCapture capture = new VideoCapture(0);
             using Window window = new Window("Settings");
-            using Window window2 = new Window("Video");
+            using Window window2 = new Window("Filter");
+            using Window window3 = new Window("Final");
 
             using Mat image = new Mat();
             Vec3i lower = new Vec3i();
             Vec3i upper = new Vec3i();
-            Mat element = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(5, 5));
+            using Mat element = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(15, 15));
 
             int hMin = 0, sMin = 0, vMin = 0, hMax = 0, sMax = 0, vMax = 0;
 
@@ -31,7 +32,8 @@ namespace ConsoleTestCV {
             while (Cv2.WaitKey(30) != 27) {
                 if (capture.Read(image)) {
                     // Image processing
-                    using Mat im2 = image.Blur(new Size(5, 5));
+                    using Mat im1 = image.GaussianBlur(new Size(5, 5), 6);
+                    using Mat im2 = im1.BilateralFilter(15, 100, 100);
                     using Mat hsv = im2.CvtColor(ColorConversionCodes.BGR2HSV);
 
                     hMin = Cv2.GetTrackbarPos("HMin", "Settings");
@@ -49,17 +51,30 @@ namespace ConsoleTestCV {
                     upper.Item2 = vMax;
                     
                     
-                    using Mat mask = hsv.InRange(lower, upper);
+                    using Mat maskt = hsv.InRange(lower, upper);
                     Mat res = new Mat();
+                    using Mat mask = new Mat();
 
+                    Cv2.Erode(maskt, mask, element);
+                    Cv2.Dilate(mask, mask, element);
+                    //Mat[] contours;
+                    
+                    
 
-
-
+                    //mask.FindContours(out contours, OutputArray.Create(new Mat()), RetrievalModes.Tree, ContourApproximationModes.ApproxSimple);
+                    
+                    
                     Cv2.BitwiseAnd(image, image, res, mask);
                     //res = res.Erode(element);
-                    res = res.Dilate(element);
+                    //res = res.Dilate(element);
+                    //foreach (var contour in contours) {
+                        var rect = mask.BoundingRect();
+                        image.Rectangle(rect, new Scalar(0, 255, 0));
+                    //}
+                    
 
                     window2.ShowImage(res);
+                    window3.ShowImage(image);
                 } else
                     break;
                 
