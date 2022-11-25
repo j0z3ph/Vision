@@ -17,7 +17,6 @@ namespace Faces {
                 }
                 window.ShowImage(image);
             }
-
         }
     }
 }
