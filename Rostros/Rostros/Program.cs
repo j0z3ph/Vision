@@ -9,11 +9,11 @@ namespace Rostros {
             using VideoCapture cam = new VideoCapture(0);
             using Mat img = new Mat();
             using Mat gris = new Mat();
-            using CascadeClassifier cascada = new CascadeClassifier(@"C:\src\progavan\Vision\haarcascades\haarcascade_frontalface_alt2.xml");
-            //using CascadeClassifier cascadaojos = new CascadeClassifier(@"C:\src\progavan\Vision\haarcascades\haarcascade_eye_tree_eyeglasses.xml");
+            using CascadeClassifier cascada = new CascadeClassifier(@"haarcascades\haarcascade_frontalface_alt2.xml");
+            //using CascadeClassifier cascadaojos = new CascadeClassifier(@"haarcascades\haarcascade_eye_tree_eyeglasses.xml");
 
-            using Mat lentes = Cv2.ImRead(@"C:\src\lentes2.png", ImreadModes.Unchanged);
-            using Mat mustache = Cv2.ImRead(@"C:\src\mustache2.png", ImreadModes.Unchanged);
+            using Mat lentes = Cv2.ImRead( @"img\lentes2.png", ImreadModes.Unchanged);
+            using Mat mustache = Cv2.ImRead(@"img\mustache2.png", ImreadModes.Unchanged);
             int key;
             bool showGlasses = false;
             bool showMustache = false;
