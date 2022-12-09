@@ -63,7 +63,7 @@ namespace Rostros {
                         using Mat tmp = mustache.Resize(new Size(cara.Width*0.8, cara.Height * 0.2));
                         Mat mask;
                         Mat[] layers;
-
+                        
                         Cv2.Split(tmp, out layers);
                         mask = layers[3];
                         Mat[] rgb = { layers[0], layers[1], layers[2] };
