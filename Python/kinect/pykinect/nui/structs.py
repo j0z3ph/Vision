@@ -393,7 +393,7 @@ class SkeletonQuality(_Enumeration):
     clipped_top = ClippedTop    = 0x00000004
     clipped_bottom = ClippedBottom = 0x00000008
 
-NUI_SKELETON_POSITION_COUNT = 1 #JointId.Count.value
+NUI_SKELETON_POSITION_COUNT = JointId.Count
 
 class SkeletonData(ctypes.Structure):
     """Contains data that characterizes a skeleton."""
