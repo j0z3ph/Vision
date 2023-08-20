@@ -1,0 +1,5 @@
+all: arduino.exe
+	.\arduino.exe
+
+arduino.exe: arduino.c serial.c
+	gcc arduino.c serial.c -o arduino.exe
