@@ -1,5 +1,16 @@
-all: arduino.exe
-	.\arduino.exe
+ifdef OS
+	APP = arduino.exe
+	EXECCMD = .\arduino.exe
+else
+	APP = arduino
+	EXECCMD = ./arduino
+endif
+MAIN = arduino.c
+SERIALLIB = serial.c
+COMPILER = gcc
 
-arduino.exe: arduino.c serial.c
-	gcc arduino.c serial.c -o arduino.exe
+all: $(APP)
+	$(EXECCMD)
+
+$(APP): $(MAIN) $(SERIALLIB)
+	$(COMPILER) $(MAIN) $(SERIALLIB) -o $(APP)
