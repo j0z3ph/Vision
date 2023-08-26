@@ -1,0 +1,22 @@
+Yolo V8
+
+Dependencias 
+pip install ultralytics
+
+Etiquetador Online 
+
+roboflow
+
+
+Trainig
+
+yolo task=detect mode=train model=yolov8s.pt data=data.yaml epochs=3 imgsz=640
+
+
+Referencias:
+https://medium.com/augmented-startups/train-yolov8-on-custom-data-6d28cd348262
+https://thepythoncode.com/article/real-time-object-tracking-with-yolov8-opencv#google_vignette
+https://docs.ultralytics.com/yolov5/tutorials/tips_for_best_training_results/
+https://dataphoenix.info/a-guide-to-the-yolo-family-of-computer-vision-models/
+https://dev.to/musabshakil/simplify-image-labelling-for-ml-using-roboflow-36cl
+
