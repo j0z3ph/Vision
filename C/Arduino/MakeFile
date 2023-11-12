@@ -2,10 +2,10 @@ ifdef OS
 	APP = arduino.exe
 	EXECCMD = .\arduino.exe
 else
-	APP = arduino
-	EXECCMD = ./arduino
+	APP = arduino.out
+	EXECCMD = ./arduino.out
 endif
-MAIN = arduino.c
+MAIN = apasos_medios.c
 SERIALLIB = serial.c
 COMPILER = gcc
 
