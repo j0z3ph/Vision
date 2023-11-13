@@ -1,7 +1,7 @@
 clc;
 clear;
 disp("Conectando")
-arduino=serialport('/dev/cu.usbmodem101',9600);
+arduino=serialport('/dev/cu.usbmodem1101',9600);
 disp("Conectado")
 cmd = " ";
 while cmd ~= "q"
