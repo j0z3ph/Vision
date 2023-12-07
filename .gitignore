@@ -400,3 +400,4 @@ FodyWeavers.xsd
 *.zip
 .DS_Store
 .vscode/
+.DS_Store
