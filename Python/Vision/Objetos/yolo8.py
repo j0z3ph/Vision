@@ -5,7 +5,7 @@ import cv2
 CONFIDENCE_THRESHOLD = 0.9
 GREEN = (0, 255, 0)
 
-video_cap = cv2.VideoCapture(1)
+video_cap = cv2.VideoCapture(0)
 
 model = YOLO("dr.strange.pt")
 #model = YOLO("yolov8s.pt")
