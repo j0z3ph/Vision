@@ -199,6 +199,7 @@ void game_over() {
 int main() {
    int Tablero[COLUMNAS][FILAS];
    vredimensiona(TAM * COLUMNAS + 220, TAM * FILAS + 100);
+   //vtitulo("Tetrix");
    srand(time(0)); // Inicializar los n�meros al azar (poner la semilla)
 
    int tic = 0, puntos = 0, nivel = 0;
