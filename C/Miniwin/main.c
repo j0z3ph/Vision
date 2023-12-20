@@ -10,37 +10,41 @@
  */
 #include<stdio.h>
 #include"miniwin.h"
+#define FPS 60
+#define GRAVEDAD 10
+#define HEIGHT 400
+#define WEIGTH 400
 
 int main()
 {
     int t;
-    float x, y;
-    vredimensiona(300, 400);
+    float x=5, y=5;
+    float ancho = 50, alto = 50, salto = -200;
+    vredimensiona(WEIGTH, HEIGHT);
     vtitulo("Mi juego");
 
     t = tecla();
     
     while(t != ESCAPE) {
-        //color_rgb(100,50,200);
-        //rectangulo_lleno(5,5,200,200);
+        y += GRAVEDAD;
+
+        if(y + alto > HEIGHT) y = HEIGHT - alto;
+        if(y < 0) y = 0;
+
         borra();
-        color(AMARILLO);
-        if(raton_dentro())
-            raton(&x, &y);
-        circulo_lleno(x,y,10);
-        color(NEGRO);
-        circulo_lleno(x,y,9);
-        color(AMARILLO);
-        circulo_lleno(x,y,5);
-        refresca();
-
-        if(raton_boton_izq()) {
-            mensaje("Click");
-        }
-
-        espera(30);
+        color(AZUL);
         
+        rectangulo_lleno(x,y,x+ancho, y+alto);
+
         t = tecla();
+        if(t == ESPACIO) {
+            y += salto;
+            t = tecla();
+        }
+        if(t == IZQUIERDA) x-=10;
+        if(t == DERECHA) x+=10;
+        refresca();
+        espera(1000/FPS);
     }
     vcierra();
     return 0;

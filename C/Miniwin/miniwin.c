@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
    wincl.lpszMenuName = NULL;
    wincl.cbClsExtra = 0;
    wincl.cbWndExtra = 0;
-   wincl.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+   wincl.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 
    if (!RegisterClassEx(&wincl))
       return 0;
