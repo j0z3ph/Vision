@@ -11,21 +11,18 @@ board = pyfirmata.Arduino('/dev/cu.usbserial-0001')
 it = pyfirmata.util.Iterator(board)
 it.start()
 
-analog_value = 0
-
 def handle_read(*data):
-    global analog_value
     analog_value = sum(data)
-    
-board.add_cmd_handler(0x02, handle_read)
+    board.send_sysex(0x04, writePwmValue(13, analog_value))
 
 def writePwmValue(pin, value):
     datasToWrite = []
 
     datasToWrite.append(pin)
-    datasToWrite.append(0)
-    datasToWrite.append(15)
-    datasToWrite.append(10)
+    datasToWrite.append(0) #Canal (hasta 16 canales para el ESP32, hasta 8 canales para el ESP32S2)
+    datasToWrite.append(1) #Multiplo de la frecuencia: Hz=0, KHz=1, MHz=2 
+    datasToWrite.append(15) #Frecuencia (desde 50 Hz hasta 40 MHz)
+    datasToWrite.append(10) #Resolución en bits (de 1 a 15) (10 es 2^10, es decir valores d0 1 hasta 1023)
 
     v = divmod(value, 127)
 
@@ -40,7 +37,8 @@ def writePwmValue(pin, value):
     print(datasToWrite)
     return datasToWrite
 
+board.add_cmd_handler(0x02, handle_read)
+
 while True:
     board.send_sysex(0x02, [12])
-    board.send_sysex(0x04, writePwmValue(13, analog_value))
     time.sleep(0.01)
