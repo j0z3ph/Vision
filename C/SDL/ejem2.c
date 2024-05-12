@@ -49,10 +49,10 @@ int main(int argc, char *argv[])
     SDL_Rect textureRect;
 
     // Setting texture position and dimension
-    textureRect.x = 0;
-    textureRect.y = SCREEN_HEIGHT - 100;
-    textureRect.w = 100;
-    textureRect.h = 100;
+    textureRect.x = 300;
+    textureRect.y = SCREEN_HEIGHT - 200;
+    textureRect.w = 200;
+    textureRect.h = 200;
 
 
     // Main loop
