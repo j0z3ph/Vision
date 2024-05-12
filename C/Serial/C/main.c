@@ -59,8 +59,6 @@ int main()
         aceleracion += GRAVITY;
         if (y + hongo.alto > valto())
             y = valto() - hongo.alto;
-        if (i_presionada)
-            x -= 10;
         if (x < 0)
         {
             x = 0;
@@ -111,34 +109,9 @@ int main()
             fullscreen(on);
         }
 
-        if (t == IZQUIERDA)
-        {
-            i_presionada = true;
-        }
-        if (t == DERECHA)
-        {
-            d_presionada = true;
-        }
-        if (t == ESPACIO)
-        {
-            aceleracion = JUMP;
-        }
-
-        t = teclaUp();
-        if (t == IZQUIERDA)
-        {
-            i_presionada = false;
-        }
-        if (t == DERECHA)
-        {
-            d_presionada = false;
-        }
-
-        readSerialPort(response, MAX_DATA_LENGTH, &arduino);
-
-        espera(1);
-
-        if (response[11] == '\n')
+        int read = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
+        
+        if (read != 0)
         {
 
             _x = atoi(response) - X_OFFSET;
@@ -160,6 +133,9 @@ int main()
             }
         }
         x += _x;
+
+        espera(1);
+
 
         // if(y >= 0) {
         //	y = (int)((double)y * ((double)MAX_Y / (double)(MAX_JOY - Y_OFFSET)));

@@ -69,7 +69,7 @@ SerialPort initSerialPort(const char *portName);
 /// @param buf_size Tamaño máximo de la cadena a leer.
 /// @param handler Puerto serie.
 /// @return Total de bytes leidos. 
-int readSerialPort(const char *buffer, unsigned int buf_size, SerialPort *handler);
+int readSerialPort(char *buffer, unsigned int buf_size, SerialPort *handler);
 #else
 /// @brief Lee una cadena de texto por el puerto serie.
 /// @param buffer Variable donde se escribirá la cadena leida. 
