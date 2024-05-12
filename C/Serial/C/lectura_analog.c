@@ -22,7 +22,7 @@
 
 int main()
 {
-	char *portName = "COM5";
+	char *portName = "/dev/cu.usbserial-0001";
 	char command[MAX_DATA_LENGTH];
 	char response[MAX_DATA_LENGTH];
 	command[0] = '\n';
@@ -41,8 +41,8 @@ int main()
 		//writeSerialPort(command, strlen(command), &arduino);
 		Sleep(1);
 		int tot = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
-		
-		if(response[11] != '\n') continue;
+
+		//if(response[11] != '\n') continue;
 		
 		int x = atoi(response) - X_OFFSET;
 		int y = atoi(response+5) - Y_OFFSET;

@@ -138,7 +138,7 @@ SerialPort initSerialPort(const char *portName)
     SerialPort handler;
     handler.connected = false;
 
-    handler.handler = open(portName, O_RDWR | O_NOCTTY);
+    handler.handler = open(portName, O_RDWR | O_NOCTTY | O_SYNC);
     if (handler.handler < 0)
     {
         printf("Error %d opening %s: %s", errno, portName, strerror(errno));
@@ -158,11 +158,11 @@ SerialPort initSerialPort(const char *portName)
         // disable IGNBRK for mismatched speed tests; otherwise receive break
         // as \000 chars
         //tty.c_iflag &= ~IGNBRK; // disable break processing
-        //tty.c_lflag = 0;        // no signaling chars, no echo,
+        tty.c_lflag = ICANON;        // no signaling chars, no echo,
                                 // no canonical processing
         //tty.c_oflag = 0;        // no remapping, no delays
-        //tty.c_cc[VMIN] = 0;     // read doesn't block
-        //tty.c_cc[VTIME] = 5;    // 0.5 seconds read timeout
+        tty.c_cc[VMIN] = MAX_DATA_LENGTH;     // read block until get MAX_DATA_LENGTH or TIMEOUT
+        tty.c_cc[VTIME] = 5;    // 0.5 seconds read timeout
 
         tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
 
