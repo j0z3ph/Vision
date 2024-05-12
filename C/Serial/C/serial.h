@@ -4,19 +4,19 @@
  * @brief Serial communication for Arduino device
  * @version 0.1
  * @date 2023-08-23
- * 
+ *
  * @copyright Copyright (c) 2023
- *  
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -26,9 +26,36 @@
 #define ARDUINO_WAIT_TIME 2000
 #define MAX_DATA_LENGTH 255
 
-#ifdef _WIN32 
+typedef enum BaudRate
+{
+    B0 = 0,
+    B50 = 50,
+    B75 = 75,
+    B110 = 110,
+    B134 = 134,
+    B150 = 150,
+    B200 = 200,
+    B300 = 300,
+    B600 = 600,
+    B1200 = 1200,
+    B1800 = 1800,
+    B2400 = 2400,
+    B4800 = 4800,
+    B9600 = 9600,
+    B19200 = 19200,
+    B38400 = 38400,
+    B7200 = 7200,
+    B14400 = 14400,
+    B28800 = 28800,
+    B57600 = 57600,
+    B76800 = 76800,
+    B115200 = 115200,
+    B230400 = 230400
+} BaudRate;
+
+#ifdef _WIN32
 #include <windows.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdbool.h>
 typedef struct Handler
 {
@@ -38,18 +65,18 @@ typedef struct Handler
     DWORD errors;
 } SerialPort;
 #else
-#include <stdio.h> 
-#include <string.h> 
-#include <unistd.h> 
-#include <fcntl.h>  
-#include <errno.h>  
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <termios.h>
 #include <time.h>
 #include <sys/types.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdint.h> 
-#include <unistd.h> 
+#include <stdint.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <getopt.h>
 typedef struct Handler
@@ -62,20 +89,20 @@ typedef struct Handler
 /// @brief Inicializa la conexión con el puerto serie.
 /// @param portName Nombre del puerto donde se conecta el arduino.
 /// @return Variable tipo SerialPort con la conexión establecida.
-SerialPort initSerialPort(const char *portName);
-#ifdef _WIN32 
+SerialPort initSerialPort(const char *portName, BaudRate br);
+#ifdef _WIN32
 /// @brief Lee una cadena de texto por el puerto serie.
-/// @param buffer Variable donde se escribirá la cadena leida. 
+/// @param buffer Variable donde se escribirá la cadena leida.
 /// @param buf_size Tamaño máximo de la cadena a leer.
 /// @param handler Puerto serie.
-/// @return Total de bytes leidos. 
+/// @return Total de bytes leidos.
 int readSerialPort(char *buffer, unsigned int buf_size, SerialPort *handler);
 #else
 /// @brief Lee una cadena de texto por el puerto serie.
-/// @param buffer Variable donde se escribirá la cadena leida. 
+/// @param buffer Variable donde se escribirá la cadena leida.
 /// @param buf_size Tamaño máximo de la cadena a leer.
 /// @param handler Puerto serie.
-/// @return Total de bytes leidos. 
+/// @return Total de bytes leidos.
 int readSerialPort(char *buffer, unsigned int buf_size, SerialPort *handler);
 #endif
 /// @brief Escribe una cadena de texto en el puerto serie.

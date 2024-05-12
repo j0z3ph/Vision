@@ -37,7 +37,7 @@ int main()
     char command[MAX_DATA_LENGTH];
     char response[MAX_DATA_LENGTH];
     command[0] = '\n';
-    SerialPort arduino = initSerialPort(portName);
+    SerialPort arduino = initSerialPort(portName, B115200);
 
     MWImage hongo = creaImagenYMascaraBMP(".\\hongoNoMask.bmp", ".\\hongomask.bmp");
     // MWImage hongo = creaImagenBMP(".\\hongo.bmp");

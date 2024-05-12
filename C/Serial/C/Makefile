@@ -1,4 +1,4 @@
-MAIN=main.c
+MAIN=shooter.c
 COMPILER=gcc
 APP=main.exe
 MINIWIN_H=miniwin.h

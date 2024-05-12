@@ -22,7 +22,7 @@
 #include "serial.h"
 
 #ifdef _WIN32
-SerialPort initSerialPort(const char *portName)
+SerialPort initSerialPort(const char *portName, BaudRate br)
 {
     SerialPort handler;
     handler.connected = false;
@@ -54,7 +54,7 @@ SerialPort initSerialPort(const char *portName)
         }
         else
         {
-            dcbSerialParameters.BaudRate = CBR_115200;
+            dcbSerialParameters.BaudRate = br;
             dcbSerialParameters.ByteSize = 8;
             dcbSerialParameters.StopBits = ONESTOPBIT;
             dcbSerialParameters.Parity = NOPARITY;
@@ -132,7 +132,7 @@ void closeSerial(SerialPort *handler)
 
 #else
 
-SerialPort initSerialPort(const char *portName)
+SerialPort initSerialPort(const char *portName, BaudRate br)
 {
     SerialPort handler;
     handler.connected = false;
@@ -150,8 +150,8 @@ SerialPort initSerialPort(const char *portName)
             printf("Error %d from tcgetattr", errno);
         }
 
-        cfsetospeed(&tty, B115200);
-        cfsetispeed(&tty, B115200);
+        cfsetospeed(&tty, br);
+        cfsetispeed(&tty, br);
 
         tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit chars
         // disable IGNBRK for mismatched speed tests; otherwise receive break
