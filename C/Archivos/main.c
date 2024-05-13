@@ -2,14 +2,16 @@
 
 int main()
 {
-    FILE *img = fopen("Lenna.bmp", "r");
-    FILE *imgGray = fopen("Lenna_Gray.bmp", "w");
-    FILE *imgBri = fopen("Lenna_Bri.bmp", "w");
-    FILE *imgR = fopen("Lenna_R.bmp", "w");
-    FILE *imgG = fopen("Lenna_G.bmp", "w");
-    FILE *imgB = fopen("Lenna_B.bmp", "w");
+    FILE *img = fopen("Lenna.bmp", "rb");
+    FILE *imgGray = fopen("Lenna_Gray.bmp", "wb");
+    FILE *imgBri = fopen("Lenna_Bri.bmp", "wb");
+    FILE *imgR = fopen("Lenna_R.bmp", "wb");
+    FILE *imgG = fopen("Lenna_G.bmp", "wb");
+    FILE *imgB = fopen("Lenna_B.bmp", "wb");
+    FILE *imgN = fopen("Lenna_N.bmp", "wb");
+    
     unsigned int w = 0, h = 0, p = 0, size=0;
-    unsigned char header[54], alpha, zero = 0, r, g, b,temp, one = 255, brig=100;
+    unsigned char header[54], alpha, zero = 0, r, g, b,temp, brig=100;
 
     if(img == NULL || imgG == NULL) {
         printf("No fue posible abrir las imagenes.");
@@ -30,12 +32,13 @@ int main()
 
     // Copiamos en encabezado
     fseek(img, 0, SEEK_SET);
-    fread(header, sizeof(char), 54, img);
-    fwrite(header, sizeof(char), 54, imgGray);
-    fwrite(header, sizeof(char), 54, imgR);
-    fwrite(header, sizeof(char), 54, imgG);
-    fwrite(header, sizeof(char), 54, imgB);
-    fwrite(header, sizeof(char), 54, imgBri);
+    fread(header, sizeof(unsigned char), 54, img);
+    fwrite(header, sizeof(unsigned char), 54, imgGray);
+    fwrite(header, sizeof(unsigned char), 54, imgR);
+    fwrite(header, sizeof(unsigned char), 54, imgG);
+    fwrite(header, sizeof(unsigned char), 54, imgB);
+    fwrite(header, sizeof(unsigned char), 54, imgBri);
+    fwrite(header, sizeof(unsigned char), 54, imgN);
     
     // Inicia la data
     // Primer byte - Alpha
@@ -45,50 +48,62 @@ int main()
     
     fseek(img, 54, SEEK_SET);
 
-    for (int i = 0; i < size; i+=4)
+    for (unsigned int i = 0; i < size; i+=3)
     {
         // Componentes
-        fread(&alpha, sizeof(char), 1, img);
-        fread(&g, sizeof(char), 1, img);
-        fread(&r, sizeof(char), 1, img);
-        fread(&b, sizeof(char), 1, img);
+        //fread(&alpha, sizeof(char), 1, img);
+        fread(&b, sizeof(unsigned char), 1, img);
+        fread(&g, sizeof(unsigned char), 1, img);
+        fread(&r, sizeof(unsigned char), 1, img);
         
         // Alpha
-        fwrite(&alpha, sizeof(char), 1, imgR);
-        fwrite(&alpha, sizeof(char), 1, imgG);
-        fwrite(&alpha, sizeof(char), 1, imgB);
+        //fwrite(&alpha, sizeof(char), 1, imgR);
+        //fwrite(&alpha, sizeof(char), 1, imgG);
+        //fwrite(&alpha, sizeof(char), 1, imgB);
 
         // Red
-        fwrite(&zero, sizeof(char), 1, imgR);
-        fwrite(&r, sizeof(char), 1, imgR);
-        fwrite(&zero, sizeof(char), 1, imgR);
-
+        fwrite(&zero, sizeof(unsigned char), 1, imgR);
+        fwrite(&zero, sizeof(unsigned char), 1, imgR);
+        fwrite(&r, sizeof(unsigned char), 1, imgR);
+        
         // Green
-        fwrite(&g, sizeof(char), 1, imgG);
-        fwrite(&zero, sizeof(char), 1, imgG);
-        fwrite(&zero, sizeof(char), 1, imgG);
+        fwrite(&zero, sizeof(unsigned char), 1, imgG);
+        fwrite(&g, sizeof(unsigned char), 1, imgG);
+        fwrite(&zero, sizeof(unsigned char), 1, imgG);
 
         // Blue
-        fwrite(&zero, sizeof(char), 1, imgB);
-        fwrite(&zero, sizeof(char), 1, imgB);
-        fwrite(&b, sizeof(char), 1, imgB);
-
+        fwrite(&b, sizeof(unsigned char), 1, imgB);
+        fwrite(&zero, sizeof(unsigned char), 1, imgB);
+        fwrite(&zero, sizeof(unsigned char), 1, imgB);
+        
         // Gray
         temp = (unsigned char)(((int)r + (int)g + (int)b) / 3);
-        fwrite(&temp, sizeof(char), 1, imgGray);
-        fwrite(&temp, sizeof(char), 1, imgGray);
-        fwrite(&temp, sizeof(char), 1, imgGray);
-        fwrite(&temp, sizeof(char), 1, imgGray);
+        //fwrite(&temp, sizeof(char), 1, imgGray);
+        fwrite(&temp, sizeof(unsigned char), 1, imgGray);
+        fwrite(&temp, sizeof(unsigned char), 1, imgGray);
+        fwrite(&temp, sizeof(unsigned char), 1, imgGray);
 
         // Brillo
-        temp = ((int)alpha + (int)brig) > 255 ? 255 : alpha + brig;
+        //temp = ((int)alpha + (int)brig) > 255 ? 255 : alpha + brig;
+        //fwrite(&temp, sizeof(char), 1, imgBri);
+        temp = ((int)b + (int)brig) > 255 ? 255 : b + brig;
         fwrite(&temp, sizeof(char), 1, imgBri);
         temp = ((int)g + (int)brig) > 255 ? 255 : g + brig;
         fwrite(&temp, sizeof(char), 1, imgBri);
         temp = ((int)r + (int)brig) > 255 ? 255 : r + brig;
         fwrite(&temp, sizeof(char), 1, imgBri);
-        temp = ((int)b + (int)brig) > 255 ? 255 : b + brig;
-        fwrite(&temp, sizeof(char), 1, imgBri);
+        
+
+        // Negativo
+        //temp = (unsigned int)255 - alpha;
+        //fwrite(&temp, sizeof(char), 1, imgN);
+        temp = (unsigned int)255 - b;
+        fwrite(&temp, sizeof(char), 1, imgN);
+        temp = (unsigned int)255 - g;
+        fwrite(&temp, sizeof(char), 1, imgN);
+        temp = (unsigned int)255 - r;
+        fwrite(&temp, sizeof(char), 1, imgN);
+        
         
     }
     
@@ -99,6 +114,8 @@ int main()
     fclose(imgG);
     fclose(imgB);
     fclose(imgBri);
+    fclose(imgBri);
+
 
     return 0;
 }
