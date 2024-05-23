@@ -1,53 +1,63 @@
-"""
-Perceptron entrenado para ser AND y OR (linealmente separables)
-No funciona con XOR (No son linealmente separables)
-"""
-
-umbral = 0.5  # umbral de activacion de la neurona (si el resultado es mayor al umbral, la neurona se activa)
-taza_aprendizaje = 0.1  # valor que se usara para ajustar los pesos en la fase de aprendizaje
-pesos = [0, 0]  # pesos iniciales (w1, w2) (Un peso por cada entrada)
-
-# entradas para entrenar
-entradas = [(0, 0), (0, 1), (1, 0), (1, 1)]  # x1, x2 (dos entradas por cada elemento de la lista de entradas)
-
-salidas_deseadas = [0, 0, 0, 1]  # AND
-
-# salidas_deseadas = [0, 1, 1, 1]  # OR
-
-# salidas_deseadas = [0, 1, 1, 0]  # XOR
+import numpy as np
 
 
-def neurona(entrada, pesos, umbral):
-    # multiplicamos cada entrada por su respectivo peso y los sumamos
-    valor = 0
-    for idx, x in enumerate(entrada):
-        valor += x * pesos[idx]
+class Perceptron:
 
-    # devolvemos 1 si la neurona se activa, 0 si no se activa
-    return int(valor > umbral)
+    def __init__(self) -> None:
+        self.umbral = -0.5
 
+    def entrenar(
+        self,
+        datos_entrenamiento,
+        salidas_esperadas,
+        taza_aprendizaje=0.1
+    ):
+        self.taza_aprendizaje = taza_aprendizaje
+        self.datos_entrenamiento = datos_entrenamiento
+        self.salidas_esperadas = salidas_esperadas
+        self.pesos = np.zeros(len(datos_entrenamiento[0]))
+        
+        while True:
+            cont_errores = 0
 
-if __name__ == "__main__":
-    while True:
-        cont_errores = 0
+            for idx, entrada in enumerate(self.datos_entrenamiento):
+                resultado = self.clasificar(entrada)
+                error = self.error(self.salidas_esperadas[idx], resultado)
+                if error != 0:
+                    cont_errores += 1
+                    # si hay error, ajustamos los pesos del perceptron
+                    self.actualiza_pesos(entrada, error)
 
-        for idx, entrada in enumerate(entradas):
-            resultado = neurona(entrada, pesos, umbral)
-            error = salidas_deseadas[idx] - resultado
-            if error != 0:
-                cont_errores += 1
-                # si hay error, ajustamos los pesos del perceptron
-                for indice, x in enumerate(entrada):
-                    pesos[indice] += x * error * taza_aprendizaje
+            if cont_errores == 0:
+                # si no hay errores, salimos
+                break
 
-        if cont_errores == 0:
-            # si no hay errores, salimos
-            break
+        print(f"Pesos finales: {self.pesos}")
 
-    print(f"Pesos finales: {pesos}")
+    def clasificar(self, entrada):
+        # multiplicamos cada entrada por su respectivo peso y los sumamos
+        valor = 0
+        # producto punto
+        for idx, x in enumerate(entrada):
+            valor += x * self.pesos[idx]
 
-    # probamos
-    print(neurona((0, 0), pesos, umbral))
-    print(neurona((0, 1), pesos, umbral))
-    print(neurona((1, 0), pesos, umbral))
-    print(neurona((1, 1), pesos, umbral))
+        # sumamos el umbral
+        valor += self.umbral
+        # devolvemos 1 si la neurona se activa, 0 si no se activa
+        return self.activacion(valor)
+
+    def activacion(self, valor):
+        return int(valor >= 0)
+
+    def error(self, salida_deseada, resultado):
+        return salida_deseada - resultado
+
+    def actualiza_pesos(self, entrada, error):
+        # actualizamos cada peso sumando el valor de la entrada por el error y la taza de aprendizaje
+        # si no hay error (error = 0), el peso no se modifica
+        # si hay error (error != 0), al peso se le suma el producto de la entrada por el error por la
+        # taza de aprendizaje
+        for indice, x in enumerate(entrada):
+            self.pesos[indice] += x * error * self.taza_aprendizaje
+        # actualizamos el umbral considerando el valor de la entrada como 1
+        self.umbral += error * self.taza_aprendizaje
