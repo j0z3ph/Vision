@@ -49,75 +49,67 @@ class MLP:
         self.pesos56 = np.zeros(2) # Pesos de las neuronas de la capa oculta (2 porque son 2 neuronas)
         
         for epoch in range(self.epochs):
-            self.propagacion_adelante(self.datos_entrenamiento)
-            self.propagacion_atras()    
+            for idx, entrada in enumerate(self.datos_entrenamiento):
+                self.propagacion_adelante(entrada)
+                self.propagacion_atras(entrada, self.salidas_esperadas[idx])    
                 
             if epoch % 500 == 0:
-                print("Loss: ", self.perdidas[epoch]) 
+                print("Loss: ", self.perdidas[epoch * len(self.datos_entrenamiento)]) 
         
         
         
-    def propagacion_adelante(self, entradas):
-        self.salida_oculta = []
-        self.salida_final = []
+    def propagacion_adelante(self, entrada):
+        #self.salida_oculta = []
+        #self.salida_final = []
         
-        for entrada in entradas:
-            # Capa de entrada
-            valorE1 = 0
-            valorE2 = 0
-            valorOculto = 0
+        # Capa de entrada
+        valorE1 = 0
+        valorE2 = 0
+        valorOculto = 0
+        
+        # Entrada 1
+        for idx, x in enumerate(entrada):
+            valorE1 += x * self.pesos12[idx]
+        valorE1 += self.umbral1
+        
+        # Entrada 2
+        for idx, x in enumerate(entrada):
+            valorE2 += x * self.pesos34[idx]
+        valorE2 += self.umbral1
+        
+        # Funcion de activacion de la capa de entrada
+        res1 = self.activacion(valorE1)
+        res2 = self.activacion(valorE2)
+        
+        self.salida_oculta = [res1, res2]
+        
+        # Capa oculta
+        
+        for idx, x in enumerate([res1, res2]):
+            valorOculto += x * self.pesos56[idx]
+        valorOculto += self.umbral2
+        
+        res_final = self.activacion(valorOculto)
+        
+        self.salida_final = res_final
             
-            # Entrada 1
-            for idx, x in enumerate(entrada):
-                valorE1 += x * self.pesos12[idx]
-            valorE1 += self.umbral1
-            
-            # Entrada 2
-            for idx, x in enumerate(entrada):
-                valorE2 += x * self.pesos34[idx]
-            valorE2 += self.umbral1
-            
-            # Funcion de activacion de la capa de entrada
-            res1 = self.activacion(valorE1)
-            res2 = self.activacion(valorE2)
-            
-            self.salida_oculta.append([res1, res2])
-            
-            # Capa oculta
-            
-            for idx, x in enumerate([res1, res2]):
-                valorOculto += x * self.pesos56[idx]
-            valorOculto += self.umbral2
-            
-            res_final = self.activacion(valorOculto)
-            
-            self.salida_final.append(res_final)
-                
         return self.salida_final
             
-    def propagacion_atras(self):
+    def propagacion_atras(self, entrada, salida_esperada):
         perdida = 0
-        for indice, x in enumerate(self.salidas_esperadas):
-            perdida += self.error(self.salidas_esperadas[indice], self.salida_final[indice])
+        perdida = self.error(salida_esperada, self.salida_final)
         self.perdidas.append(perdida)
         
-        for indice, x in enumerate(self.datos_entrenamiento):
-            error = self.salidas_esperadas[indice] - self.salida_final[indice]
-            
-            self.pesos12[0] += x[0] * error * (self.gradiente(self.salida_final[indice]) * self.pesos56[0] * self.gradiente(self.salida_oculta[indice][0])) * self.taza_aprendizaje
-            self.pesos12[1] += x[1] * error * (self.gradiente(self.salida_final[indice]) * self.pesos56[1] * self.gradiente(self.salida_oculta[indice][1])) * self.taza_aprendizaje
-            
-            self.pesos34[0] += x[0] * error * (self.gradiente(self.salida_final[indice]) * self.pesos56[0] * self.gradiente(self.salida_oculta[indice][0])) * self.taza_aprendizaje
-            self.pesos34[1] += x[1] * error * (self.gradiente(self.salida_final[indice]) * self.pesos56[1] * self.gradiente(self.salida_oculta[indice][1])) * self.taza_aprendizaje
-            
-            self.pesos56[0] += self.salida_oculta[indice][0] * error * self.gradiente(self.salida_final[indice]) * self.taza_aprendizaje
-            self.pesos56[1] += self.salida_oculta[indice][1] * error * self.gradiente(self.salida_final[indice]) * self.taza_aprendizaje
-                
-            self.umbral1 += error * (self.gradiente(self.salida_final[indice]) * self.pesos56[0] * self.gradiente(self.salida_oculta[indice][0])) * self.taza_aprendizaje
-            self.umbral1 += error * (self.gradiente(self.salida_final[indice]) * self.pesos56[1] * self.gradiente(self.salida_oculta[indice][1])) * self.taza_aprendizaje
-            
-            self.umbral2 += error * self.gradiente(self.salida_final[indice]) * self.taza_aprendizaje
+        error = salida_esperada - self.salida_final
         
+        for idx, x in enumerate(entrada):
+            self.pesos12[idx] += x * error * (self.gradiente(self.salida_final) * self.pesos56[idx] * self.gradiente(self.salida_oculta[idx])) * self.taza_aprendizaje
+            self.pesos34[idx] += x * error * (self.gradiente(self.salida_final) * self.pesos56[idx] * self.gradiente(self.salida_oculta[idx])) * self.taza_aprendizaje
+            self.pesos56[idx] += self.salida_oculta[idx] * error * self.gradiente(self.salida_final) * self.taza_aprendizaje 
+            self.umbral1 += error * (self.gradiente(self.salida_final) * self.pesos56[idx] * self.gradiente(self.salida_oculta[idx])) * self.taza_aprendizaje
+            
+        self.umbral2 += error * self.gradiente(self.salida_final) * self.taza_aprendizaje
+    
         
         
     def gradiente(self, valor):
@@ -126,7 +118,7 @@ class MLP:
             
             
     def clasificar(self, entrada):
-        return self.propagacion_adelante([entrada])
+        return int(self.propagacion_adelante(entrada)>0.5)
 
     def activacion(self, valor):
         # Funcion sigmoide
@@ -144,7 +136,7 @@ if __name__ == "__main__":
     nn = MLP()
     nn.entrenar(entradas, salidas)
     # probamos
-    print(nn.clasificar((0,0)))
+    print(nn.clasificar((0, 0)))
     print(nn.clasificar((0, 1)))
     print(nn.clasificar((1, 0)))
     print(nn.clasificar((1, 1)))
