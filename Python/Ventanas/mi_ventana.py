@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QMainWindow, QDialog
 from Ui_mi_ventana import *
 from Ui_dialogo import *
@@ -10,6 +11,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         # Se conecta el evento clicked con la funcion showDialog
         self.pushButton.clicked.connect(self.showDialog)
+        
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
+        pos = self.pos()
+        if a0.key() == QtCore.Qt.Key.Key_Left:
+            pos.setX(pos.x()-5)
+        if a0.key() == QtCore.Qt.Key.Key_Right:
+            pos.setX(pos.x()+5)
+        if a0.key() == QtCore.Qt.Key.Key_Up:
+            pos.setY(pos.y()-5)
+        if a0.key() == QtCore.Qt.Key.Key_Down:
+            pos.setY(pos.y()+5)
+        
+        self.move(pos)
+        
+        return super().keyPressEvent(a0)
         
     def showDialog(self):
         dialog = MiDialogo(self)
