@@ -3,26 +3,30 @@
 
 int main()
 {
-	char *portName = "/dev/cu.usbmodem1101";
+	char *portName = "COM4";
 	char command[MAX_DATA_LENGTH];
 	char response[MAX_DATA_LENGTH];
+	int delay = 0;
 	command[0] = '\n';
-	SerialPort arduino = initSerialPort(portName);
+	SerialPort arduino = initSerialPort(portName, B115200);
 	printf("Conectando");
-	while (!isConnected(&arduino)) {
+	while (!isConnected(&arduino))
+	{
 		Sleep(100);
 		printf(".");
-		arduino = initSerialPort(portName);
+		arduino = initSerialPort(portName, B115200);
 	}
 	if (isConnected(&arduino))
 		printf("\nConectado al puerto %s\n", portName);
-	
-	while (isConnected(&arduino) && command[0] != 'q') {
-		strcpy(command, "\n");
+
+	while (isConnected(&arduino))
+	{
+		strcpy(command, "analog\n");
 		writeSerialPort(command, strlen(command), &arduino);
 		Sleep(1);
 		readSerialPort(response, MAX_DATA_LENGTH, &arduino);
-		int delay = atoi(response) + 100;
+		delay = ((900 * atoi(response)) / 4095) + 100;
+		// printf("%i\n", delay);
 		strcpy(command, "on\n");
 		writeSerialPort(command, strlen(command), &arduino);
 		Sleep(delay);

@@ -8,14 +8,14 @@ int main()
 	char response[MAX_DATA_LENGTH];
 	command[0] = '\n';
 
-	SerialPort arduino = initSerialPort(portName);
+	SerialPort arduino = initSerialPort(portName, B115200);
 
 	printf("Conectando");
 	while (!isConnected(&arduino))
 	{
 		Sleep(100);
 		printf(".");
-		arduino = initSerialPort(portName);
+		arduino = initSerialPort(portName, B115200);
 	}
 
 	if (isConnected(&arduino))

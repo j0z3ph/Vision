@@ -1,5 +1,5 @@
-#define BAUD 9600
-#define led 13
+#define BAUD 115200
+#define led 2
 
 String receivedString;
 

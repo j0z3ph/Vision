@@ -8,12 +8,12 @@ int main()
 	char response[MAX_DATA_LENGTH];
 	int delay = 10;
 	command[0] = '\n';
-	SerialPort arduino = initSerialPort(portName);
+	SerialPort arduino = initSerialPort(portName, B115200);
 	printf("Conectando");
 	while (!isConnected(&arduino)) {
 		Sleep(100);
 		printf(".");
-		arduino = initSerialPort(portName);
+		arduino = initSerialPort(portName, B115200);
 	}
 	if (isConnected(&arduino))
 		printf("\nConectado al puerto %s\n", portName);

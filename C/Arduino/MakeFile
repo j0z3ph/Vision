@@ -1,11 +1,6 @@
-ifdef OS
-	APP = arduino.exe
-	EXECCMD = .\arduino.exe
-else
-	APP = arduino.out
-	EXECCMD = ./arduino.out
-endif
-MAIN = apasos_medios.c
+APP = app.exe
+EXECCMD = ./$(APP)
+MAIN = servo.c
 SERIALLIB = serial.c
 COMPILER = gcc
 

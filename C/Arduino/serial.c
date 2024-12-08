@@ -4,25 +4,25 @@
  * @brief Serial communication for Arduino device
  * @version 0.1
  * @date 2023-08-23
- * 
+ *
  * @copyright Copyright (c) 2023
- *  
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "serial.h"
 
 #ifdef _WIN32
-SerialPort initSerialPort(const char *portName)
+SerialPort initSerialPort(const char *portName, BaudRate br)
 {
     SerialPort handler;
     handler.connected = false;
@@ -31,7 +31,7 @@ SerialPort initSerialPort(const char *portName)
                                   0,
                                   NULL,
                                   OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL,
+                                  0,
                                   NULL);
     if (handler.handler == INVALID_HANDLE_VALUE)
     {
@@ -54,7 +54,7 @@ SerialPort initSerialPort(const char *portName)
         }
         else
         {
-            dcbSerialParameters.BaudRate = CBR_9600;
+            dcbSerialParameters.BaudRate = br;
             dcbSerialParameters.ByteSize = 8;
             dcbSerialParameters.StopBits = ONESTOPBIT;
             dcbSerialParameters.Parity = NOPARITY;
@@ -75,33 +75,32 @@ SerialPort initSerialPort(const char *portName)
     return handler;
 }
 
-int readSerialPort(const char *buffer, unsigned int buf_size, SerialPort *handler)
+int readSerialPort(char *buffer, unsigned int buf_size, SerialPort *handler)
 {
-    DWORD bytesRead;
-    unsigned int toRead = 0;
-
+    char c;
+    unsigned int bytesRead = 0;
     ClearCommError(handler->handler, &handler->errors, &handler->status);
+    memset((void *)buffer, 0, buf_size);
 
     if (handler->status.cbInQue > 0)
     {
-        if (handler->status.cbInQue > buf_size)
+        while (ReadFile(handler->handler, &c, 1, NULL, NULL))
         {
-            toRead = buf_size;
+            if (bytesRead >= buf_size)
+            {
+                bytesRead--;
+                break;
+            }
+            buffer[bytesRead++] = c;
+            if (c == '\n')
+            {
+                break;
+            }
         }
-        else
-        {
-            toRead = handler->status.cbInQue;
-        }
+        buffer[bytesRead] = '\0';
     }
 
-    memset((void *)buffer, 0, buf_size);
-
-    if (ReadFile(handler->handler, (void *)buffer, toRead, &bytesRead, NULL))
-    {
-        return bytesRead;
-    }
-
-    return 0;
+    return bytesRead;
 }
 
 bool writeSerialPort(const char *buffer, unsigned int buf_size, SerialPort *handler)
@@ -133,7 +132,7 @@ void closeSerial(SerialPort *handler)
 
 #else
 
-SerialPort initSerialPort(const char *portName)
+SerialPort initSerialPort(const char *portName, BaudRate br)
 {
     SerialPort handler;
     handler.connected = false;
@@ -151,18 +150,18 @@ SerialPort initSerialPort(const char *portName)
             printf("Error %d from tcgetattr", errno);
         }
 
-        cfsetospeed(&tty, B9600);
-        cfsetispeed(&tty, B9600);
+        cfsetospeed(&tty, br);
+        cfsetispeed(&tty, br);
 
         tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit chars
         // disable IGNBRK for mismatched speed tests; otherwise receive break
         // as \000 chars
-        tty.c_iflag &= ~IGNBRK; // disable break processing
-        tty.c_lflag = 0;        // no signaling chars, no echo,
-                                // no canonical processing
-        tty.c_oflag = 0;        // no remapping, no delays
-        tty.c_cc[VMIN] = 0;     // read doesn't block
-        tty.c_cc[VTIME] = 5;    // 0.5 seconds read timeout
+        // tty.c_iflag &= ~IGNBRK; // disable break processing
+        tty.c_lflag = ICANON; // no signaling chars, no echo,
+                              // no canonical processing
+        // tty.c_oflag = 0;        // no remapping, no delays
+        tty.c_cc[VMIN] = MAX_DATA_LENGTH; // read block until get MAX_DATA_LENGTH or TIMEOUT
+        tty.c_cc[VTIME] = 5;              // 0.5 seconds read timeout
 
         tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
 
