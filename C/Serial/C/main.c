@@ -14,8 +14,8 @@
 #define GRAVITY 1
 #define JUMP -20
 
-#define X_OFFSET 3105
-#define Y_OFFSET 3095
+#define X_OFFSET 3182
+#define Y_OFFSET 3165
 #define MAX_JOY 4095
 #define MIN_JOY 0
 #define MAX_X 10
@@ -27,25 +27,23 @@ int main()
 {
     int t, aceleracion = 0;
     bool on = false;
-    bool unavez = false, unavez2 = false;;
-    bool i_presionada = false;
-    bool d_presionada = false;
     float x = 150, y = 150;
     int _x = 0;
+    int read;
 
-    char *portName = "COM5";
+    char *portName = "COM6";
     char command[MAX_DATA_LENGTH];
     char response[MAX_DATA_LENGTH];
     command[0] = '\n';
     SerialPort arduino = initSerialPort(portName, B115200);
 
-    MWImage hongo = creaImagenYMascaraBMP(".\\hongoNoMask.bmp", ".\\hongomask.bmp");
-    // MWImage hongo = creaImagenBMP(".\\hongo.bmp");
-    hongo.pos_x = 150;
-    hongo.pos_y = 150;
+    MiniWinImage *hongo = creaImagenYMascaraBMP(".\\hongoNoMask.bmp", ".\\hongomask.bmp");
+    // MiniWinImage* hongo = creaImagenBMP(".\\hongo.bmp");
+    hongo->pos_x = 150;
+    hongo->pos_y = 150;
 
-    hongo.alto = 50;
-    hongo.ancho = 50;
+    hongo->alto = 50;
+    hongo->ancho = 50;
 
     ventana(800, 600);
     titulo("Mi Primer Juego");
@@ -57,48 +55,34 @@ int main()
     {
         y += aceleracion;
         aceleracion += GRAVITY;
-        if (y + hongo.alto > valto())
-            y = valto() - hongo.alto;
+        if (y + hongo->alto > valto())
+            y = valto() - hongo->alto;
         if (x < 0)
         {
             x = 0;
-            if (!unavez)
-            {
-                strcpy(command, "on\n");
-                writeSerialPort(command, strlen(command), &arduino);
-                unavez = true;
-            }
+            strcpy(command, "vibra\n");
+            writeSerialPort(command, strlen(command), &arduino);
         }
-        else
-            unavez = false;
-        if (d_presionada)
-            x += 10;
-        if (x + hongo.ancho > vancho())
+        if (x + hongo->ancho > vancho())
         {
-            x = vancho() - hongo.ancho -1;
-            if (!unavez2)
-            {
-                strcpy(command, "on\n");
-                writeSerialPort(command, strlen(command), &arduino);
-                unavez2 = true;
-            }
+            x = vancho() - hongo->ancho - 1;
+            strcpy(command, "vibra\n");
+            writeSerialPort(command, strlen(command), &arduino);
         }
-        else
-            unavez2 = false;
 
         borra();
         color(NEGRO);
         // texto(20,20,"Presione ESC para salir");
         textoExt(20, 20, "Presione ESC para salir", 50, true, true, true, "Arial");
-        //texto(50, 150, "Hola");
+        // texto(50, 150, "Hola");
 
         // color(VERDE);
         // rectangulo_lleno(x,y,x+50,y+50);
-        hongo.pos_x = x;
-        hongo.pos_y = y;
+        hongo->pos_x = x;
+        hongo->pos_y = y;
 
         // Imagen TEST
-        muestraImagen(&hongo);
+        muestraImagen(hongo);
 
         refresca();
         t = teclaDown();
@@ -109,8 +93,10 @@ int main()
             fullscreen(on);
         }
 
-        int read = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
-        
+        strcpy(command, "read\n");
+        writeSerialPort(command, strlen(command), &arduino);
+        read = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
+
         if (read != 0)
         {
 
@@ -125,17 +111,18 @@ int main()
             {
                 _x = (-1) * (int)((double)_x * ((double)MIN_X / (double)(X_OFFSET)));
             }
-            if (response[9] == '-' && response[10] == '0')
+            if (response[10] == '0')
             {
                 aceleracion = JUMP;
-                strcpy(command, "on\n");
+                strcpy(command, "vibra\n");
                 writeSerialPort(command, strlen(command), &arduino);
             }
         }
         x += _x;
 
         espera(1);
-
+        strcpy(command, "!vibra\n");
+        writeSerialPort(command, strlen(command), &arduino);
 
         // if(y >= 0) {
         //	y = (int)((double)y * ((double)MAX_Y / (double)(MAX_JOY - Y_OFFSET)));
@@ -143,7 +130,7 @@ int main()
         //	y = (-1)*(int)((double)y * ((double)MIN_Y / (double)(Y_OFFSET)));
         // }
     }
-    eliminaImagen(&hongo);
+    eliminaImagen(hongo);
     cierra();
     return 0;
 }

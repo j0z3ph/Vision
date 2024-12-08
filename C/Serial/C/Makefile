@@ -1,6 +1,8 @@
-MAIN=shooter.c
+MAIN=main.c
 COMPILER=gcc
 APP=main.exe
+MAIN_TEST=control_calib.c
+APP_TEST=test.exe
 MINIWIN_H=miniwin.h
 MINIWIN_LIB=miniwin.o
 MINIWIN_SRC=miniwin.c
@@ -19,9 +21,9 @@ $(MINIWIN_LIB): $(MINIWIN_H) $(MINIWIN_SRC)
 clean: 
 	del $(APP) $(MINIWIN_LIB)
 
-test: test.exe
-	./test.exe
+test: $(APP_TEST)
+	./$(APP_TEST)
 
-test.exe: lectura_analog.c $(SERIAL_H)
-	$(COMPILER) -o test.exe lectura_analog.c $(SERIAL)
+$(APP_TEST): $(MAIN_TEST) $(SERIAL_H)
+	$(COMPILER) -o $(APP_TEST) $(MAIN_TEST) $(SERIAL)
 

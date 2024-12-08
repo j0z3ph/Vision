@@ -21,7 +21,7 @@
 #ifndef _MINIWIN_H_
 #define _MINIWIN_H_
 
-#define _MINIWIN_VERSION_ "MiniWin 0.2.2"
+#define _MINIWIN_VERSION_ "MiniWin 0.2.3"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -35,24 +35,60 @@ int _main_();
 
 typedef enum Teclas
 {
-	ESCAPE,
-	IZQUIERDA,
-	DERECHA,
-	ARRIBA,
-	ABAJO,
-	F1,
-	F2,
-	F3,
-	F4,
-	F5,
-	F6,
-	F7,
-	F8,
-	F9,
-	F10,
-	ESPACIO,
-	RETURN,
-	NINGUNA
+	ESCAPE = VK_ESCAPE,
+	IZQUIERDA = VK_LEFT,
+	DERECHA = VK_RIGHT,
+	ARRIBA = VK_UP,
+	ABAJO = VK_DOWN,
+	F1 = VK_F1,
+	F2 = VK_F2,
+	F3 = VK_F3,
+	F4 = VK_F4,
+	F5 = VK_F5,
+	F6 = VK_F6,
+	F7 = VK_F7,
+	F8 = VK_F8,
+	F9 = VK_F9,
+	F10 = VK_F10,
+	ESPACIO = VK_SPACE,
+	RETURN = VK_RETURN,
+	NUMERO_0 = 48,
+	NUMERO_1 = 49,
+	NUMERO_2 = 50,
+	NUMERO_3 = 51,
+	NUMERO_4 = 52,
+	NUMERO_5 = 53,
+	NUMERO_6 = 54,
+	NUMERO_7 = 55,
+	NUMERO_8 = 56,
+	NUMERO_9 = 57,
+	LETRA_A = 65,
+	LETRA_B = 66,
+	LETRA_C = 67,
+	LETRA_D = 68,
+	LETRA_E = 69,
+	LETRA_F = 70,
+	LETRA_G = 71,
+	LETRA_H = 72,
+	LETRA_I = 73,
+	LETRA_J = 74,
+	LETRA_K = 75,
+	LETRA_L = 76,
+	LETRA_M = 77,
+	LETRA_N = 78,
+	LETRA_O = 79,
+	LETRA_P = 80,
+	LETRA_Q = 81,
+	LETRA_R = 82,
+	LETRA_S = 83,
+	LETRA_T = 84,
+	LETRA_U = 85,
+	LETRA_V = 86,
+	LETRA_W = 87,
+	LETRA_X = 88,
+	LETRA_Y = 89,
+	LETRA_Z = 90,
+	NINGUNA = 0
 } Teclas;
 
 typedef enum Colores
@@ -109,7 +145,23 @@ typedef struct MiniWinImage
 	 *
 	 */
 	long alto;
-} MWImage;
+} MiniWinImage;
+
+typedef struct Node {
+	int value;
+	struct Node *next;
+} Node;
+
+typedef struct Queue {
+	Node *head;
+	Node *tail;
+} Queue;
+
+void queue_push(Queue **queue, int val);
+int queue_front(Queue **queue);
+int queue_pop(Queue **queue);
+bool queue_empty(Queue **queue);
+void queue_clear(Queue **queue);
 
 /**
  * @brief Permite cambiar al modo pantalla completa.
@@ -141,9 +193,10 @@ void color_fondo_rgb(int r, int g, int b);
  * NOTA: No se aceptan imagenes de otro formato.
  *
  * @param ruta Ruta de la imagen a cargar.
- * @return MWImage Representacion de la imagen.
+ * @return MiniWinImage Representacion de la imagen. NULL si no fue
+ * posible cargar la imagen.
  */
-MWImage creaImagenBMP(const char *ruta);
+MiniWinImage* creaImagenBMP(const char *ruta);
 
 /**
  * @brief Permite crear una imagen BMP.
@@ -151,23 +204,24 @@ MWImage creaImagenBMP(const char *ruta);
  *
  * @param ruta Ruta de la imagen a cargar.
  * @param ruta_mask Ruta de la mascara. Debe ser del mismo tamanio.
- * @return MWImage Representacion de la imagen.
+ * @return MiniWinImage Representacion de la imagen. NULL si no fue 
+ * posible cargar la imagen.
  */
-MWImage creaImagenYMascaraBMP(const char *ruta, const char *ruta_mask);
+MiniWinImage* creaImagenYMascaraBMP(const char *ruta, const char *ruta_mask);
 
 /**
  * @brief Permite eliminar una imagen creada.
  *
  * @param imagen La imagen a eliminar.
  */
-void eliminaImagen(MWImage *imagen);
+void eliminaImagen(MiniWinImage *imagen);
 
 /**
  * @brief Muestra la imagen en pantalla.
  *
  * @param imagen La imagen en mostrar.
  */
-void muestraImagen(MWImage *imagen);
+void muestraImagen(MiniWinImage *imagen);
 
 /**
  * @brief Muestra una imagen en pantalla a la escala deseada.
@@ -176,7 +230,7 @@ void muestraImagen(MWImage *imagen);
  * @param ancho Ancho deseado.
  * @param alto Alto deseado.
  */
-// void muestraImagenEscalada(MWImage imagen, int ancho, int alto);
+// void muestraImagenEscalada(MiniWinImage imagen, int ancho, int alto);
 
 /**
  * @brief Permite imprimir un texto en pantalla.

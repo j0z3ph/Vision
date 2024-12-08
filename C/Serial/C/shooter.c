@@ -1,19 +1,19 @@
 /**
- * @file main.c
- * @author your name (you@domain.com)
+ * @file shooter.c
+ * @author Jose Luis Cruz (jlcruz@ipn.mx)
  * @brief
  * @version 0.1
- * @date 2023-12-13
+ * @date 2024-12-08
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  *
  */
 #include <stdio.h>
 #include "miniwin.h"
 #include "serial.h"
 
-#define X_OFFSET 3105
-#define Y_OFFSET 3095
+#define X_OFFSET 3182
+#define Y_OFFSET 3165
 #define MAX_JOY 4095
 #define MIN_JOY 0
 #define MAX_X 15
@@ -23,12 +23,12 @@
 
 int main()
 {
-    int t;
+    int t, read;
     bool on = false;
     float x = 400, y = 300;
     int _x = 0, _y = 0;
 
-    char *portName = "COM5";
+    char *portName = "COM4";
     char command[MAX_DATA_LENGTH];
     char response[MAX_DATA_LENGTH];
     command[0] = '\n';
@@ -58,10 +58,10 @@ int main()
         color(BLANCO);
         circulo(x, y, 7);
         circulo(x, y, 15);
-        linea(x, y-10,x, y-2);
-        linea(x, y+2,x, y+10);
-        linea(x-10, y,x-2, y);
-        linea(x+2, y,x+10, y);
+        linea(x, y - 10, x, y - 2);
+        linea(x, y + 2, x, y + 10);
+        linea(x - 10, y, x - 2, y);
+        linea(x + 2, y, x + 10, y);
 
         refresca();
         t = teclaDown();
@@ -72,7 +72,10 @@ int main()
             fullscreen(on);
         }
 
-        int read = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
+        strcpy(command, "read\n");
+        writeSerialPort(command, strlen(command), &arduino);
+        Sleep(1);
+        read = readSerialPort(response, MAX_DATA_LENGTH, &arduino);
 
         if (read != 0)
         {
@@ -98,7 +101,12 @@ int main()
             }
             if (response[10] == '0')
             {
-                strcpy(command, "on\n");
+                strcpy(command, "vibra\n");
+                writeSerialPort(command, strlen(command), &arduino);
+            }
+            else
+            {
+                strcpy(command, "!vibra\n");
                 writeSerialPort(command, strlen(command), &arduino);
             }
         }

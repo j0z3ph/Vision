@@ -53,133 +53,82 @@ int iWidthPrev;					// respaldo del ancho de la ventana antes de ir a fullscreen
 int iHeightPrev;				// respaldo del alto de la ventana antes de ir a fullscreen
 bool _fullscreen = false;		// modo fullscreen
 
-// queue constants
-static int *queue = NULL;
-static int q_cont = 0;
+// Queue stuff
+static Queue *keyDownQueue = NULL;
+static Queue *keyUpQueue = NULL;
 
-// second queue
-static int *queue2 = NULL;
-static int q_cont2 = 0;
+void queue_push(Queue **queue, int val)
+{
+	if (*queue == NULL)
+	{
+		*queue = (Queue *)malloc(sizeof(Queue));
+		(*queue)->head = (Node *)malloc(sizeof(Node));
+		(*queue)->head->value = val;
+		(*queue)->head->next = NULL;
+		(*queue)->tail = (*queue)->head;
+	}
+	else
+	{
+		(*queue)->tail->next = (Node *)malloc(sizeof(Node));
+		(*queue)->tail = (*queue)->tail->next;
+		(*queue)->tail->value = val;
+		(*queue)->tail->next = NULL;
+	}
+}
+
+int queue_front(Queue **queue)
+{
+	int val = -1;
+	if (*queue != NULL)
+	{
+		val = (*queue)->head->value;
+	}
+
+	return val;
+}
+
+int queue_pop(Queue **queue)
+{
+	int val = -1;
+	if (*queue != NULL)
+	{
+		val = (*queue)->head->value;
+		Node *tmp = (*queue)->head;
+		(*queue)->head = (*queue)->head->next;
+		free(tmp);
+		if ((*queue)->head == NULL)
+		{
+			free(*queue);
+			*queue = NULL;
+		}
+	}
+
+	return val;
+}
+
+bool queue_empty(Queue **queue)
+{
+	return *queue == NULL;
+}
+
+void queue_clear(Queue **queue)
+{
+	if (*queue != NULL)
+	{
+		Queue *q = *queue;
+		*queue = NULL;
+		Node *tmp;
+		while (q->head != NULL)
+		{
+			tmp = q->head;
+			q->head = q->head->next;
+			free(tmp);
+		}
+		free(q);
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// QUEUE FUNCTIONS ////
-// Alguien que arregle esto!! //
-static void q_push(int val)
-{
-	q_cont++;
-	if (queue == NULL)
-	{
-		queue = (int *)malloc(q_cont * sizeof(int));
-	}
-	else
-	{
-		queue = (int *)realloc(queue, q_cont * sizeof(int));
-	}
-	queue[q_cont - 1] = val;
-}
-
-static int q_front()
-{
-	if (queue != NULL && q_cont != 0)
-	{
-		return queue[q_cont - 1];
-	}
-	else
-	{
-		return -1;
-	}
-}
-
-static int q_pop()
-{
-	int tmp;
-	if (queue != NULL && q_cont > 1)
-	{
-		q_cont--;
-		tmp = queue[q_cont];
-		queue = (int *)realloc(queue, q_cont * sizeof(int));
-	}
-	else if (queue != NULL)
-	{
-		q_cont--;
-		tmp = queue[q_cont];
-		free(queue);
-		queue = NULL;
-	}
-	else
-	{
-		tmp = -1;
-	}
-	return tmp;
-}
-
-static bool q_empty()
-{
-	if (q_cont > 0)
-		return false;
-	else
-		return true;
-}
-
-static void q_push2(int val)
-{
-	q_cont2++;
-	if (queue2 == NULL)
-	{
-		queue2 = (int *)malloc(q_cont2 * sizeof(int));
-	}
-	else
-	{
-		queue2 = (int *)realloc(queue2, q_cont2 * sizeof(int));
-	}
-	queue2[q_cont2 - 1] = val;
-}
-
-static int q_front2()
-{
-	if (queue2 != NULL && q_cont2 != 0)
-	{
-		return queue2[q_cont2 - 1];
-	}
-	else
-	{
-		return -1;
-	}
-}
-
-static int q_pop2()
-{
-	int tmp;
-	if (queue2 != NULL && q_cont2 > 1)
-	{
-		q_cont2--;
-		tmp = queue2[q_cont2];
-		queue2 = (int *)realloc(queue2, q_cont2 * sizeof(int));
-	}
-	else if (queue2 != NULL)
-	{
-		q_cont2--;
-		tmp = queue2[q_cont2];
-		free(queue2);
-		queue2 = NULL;
-	}
-	else
-	{
-		tmp = -1;
-	}
-	return tmp;
-}
-
-static bool q_empty2()
-{
-	if (q_cont2 > 0)
-		return false;
-	else
-		return true;
-}
-
-//////////////
 
 static VOID Thread(PVOID pvoid)
 {
@@ -243,27 +192,27 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 		return 0;
 
 	int w, h, xPos, yPos;
-    frame_real(iWidth, iHeight, &w, &h);
+	frame_real(iWidth, iHeight, &w, &h);
 
-    // Centra la ventana
-    xPos = (GetSystemMetrics(SM_CXSCREEN) - w) / 2;
-    yPos = (GetSystemMetrics(SM_CYSCREEN) - h) / 2;
+	// Centra la ventana
+	xPos = (GetSystemMetrics(SM_CXSCREEN) - w) / 2;
+	yPos = (GetSystemMetrics(SM_CYSCREEN) - h) / 2;
 
-    hWnd = CreateWindowEx(
-        0,                                     /* Extended possibilites for variation */
-        szClassName,                           /* Classname */
-        _MINIWIN_VERSION_,                     /* Title Text */
-        WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, /* no resizable window */
-        xPos,                                  /* The window position  */
-        yPos,                                  /* in x and y coordinates */
-        w,                                     /* The programs width */
-        h,                                     /* and height in pixels */
-        HWND_DESKTOP,                          /* The window is a child-window to desktop */
-        NULL,                                  /* No menu */
-        hThisInstance,                         /* Program Instance handler */
-        NULL                                   /* No Window Creation data */
-    );
-	
+	hWnd = CreateWindowEx(
+		0,									   /* Extended possibilites for variation */
+		szClassName,						   /* Classname */
+		_MINIWIN_VERSION_,					   /* Title Text */
+		WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX, /* no resizable window */
+		xPos,								   /* The window position  */
+		yPos,								   /* in x and y coordinates */
+		w,									   /* The programs width */
+		h,									   /* and height in pixels */
+		HWND_DESKTOP,						   /* The window is a child-window to desktop */
+		NULL,								   /* No menu */
+		hThisInstance,						   /* Program Instance handler */
+		NULL								   /* No Window Creation data */
+	);
+
 	hBitmap = NULL;
 
 	ShowWindow(hWnd, nFunsterStil);
@@ -417,7 +366,7 @@ static LRESULT CALLBACK WindowProcedure(HWND hWnd,
 		}
 
 		if (push_it)
-			q_push(wParam);
+			queue_push(&keyDownQueue, wParam);
 
 		break;
 	}
@@ -452,7 +401,7 @@ static LRESULT CALLBACK WindowProcedure(HWND hWnd,
 		}
 
 		if (push_it)
-			q_push2(wParam);
+			queue_push(&keyUpQueue, wParam);
 
 		break;
 	}
@@ -482,67 +431,10 @@ static COLORREF _back_color = RGB(255, 255, 255);
 
 int tecla()
 {
-	if (q_empty())
+	if (queue_empty(&keyDownQueue))
 		return NINGUNA;
 
-	int ret = NINGUNA;
-	switch (q_front())
-	{
-	case VK_LEFT:
-		ret = IZQUIERDA;
-		break;
-	case VK_RIGHT:
-		ret = DERECHA;
-		break;
-	case VK_UP:
-		ret = ARRIBA;
-		break;
-	case VK_DOWN:
-		ret = ABAJO;
-		break;
-	case VK_ESCAPE:
-		ret = ESCAPE;
-		break;
-	case VK_SPACE:
-		ret = ESPACIO;
-		break;
-	case VK_RETURN:
-		ret = RETURN;
-		break;
-	case VK_F1:
-		ret = F1;
-		break;
-	case VK_F2:
-		ret = F2;
-		break;
-	case VK_F3:
-		ret = F3;
-		break;
-	case VK_F4:
-		ret = F4;
-		break;
-	case VK_F5:
-		ret = F5;
-		break;
-	case VK_F6:
-		ret = F6;
-		break;
-	case VK_F7:
-		ret = F7;
-		break;
-	case VK_F8:
-		ret = F8;
-		break;
-	case VK_F9:
-		ret = F9;
-		break;
-	case VK_F10:
-		ret = F10;
-		break;
-	default:
-		ret = q_front();
-	}
-	q_pop();
+	int ret = queue_pop(&keyDownQueue);
 	return ret;
 }
 
@@ -553,67 +445,12 @@ int teclaDown()
 
 int teclaUp()
 {
-	if (q_empty2())
+	queue_clear(&keyDownQueue);
+
+	if (queue_empty(&keyUpQueue))
 		return NINGUNA;
 
-	int ret = NINGUNA;
-	switch (q_front2())
-	{
-	case VK_LEFT:
-		ret = IZQUIERDA;
-		break;
-	case VK_RIGHT:
-		ret = DERECHA;
-		break;
-	case VK_UP:
-		ret = ARRIBA;
-		break;
-	case VK_DOWN:
-		ret = ABAJO;
-		break;
-	case VK_ESCAPE:
-		ret = ESCAPE;
-		break;
-	case VK_SPACE:
-		ret = ESPACIO;
-		break;
-	case VK_RETURN:
-		ret = RETURN;
-		break;
-	case VK_F1:
-		ret = F1;
-		break;
-	case VK_F2:
-		ret = F2;
-		break;
-	case VK_F3:
-		ret = F3;
-		break;
-	case VK_F4:
-		ret = F4;
-		break;
-	case VK_F5:
-		ret = F5;
-		break;
-	case VK_F6:
-		ret = F6;
-		break;
-	case VK_F7:
-		ret = F7;
-		break;
-	case VK_F8:
-		ret = F8;
-		break;
-	case VK_F9:
-		ret = F9;
-		break;
-	case VK_F10:
-		ret = F10;
-		break;
-	default:
-		ret = q_front2();
-	}
-	q_pop2();
+	int ret = queue_pop(&keyUpQueue);
 	return ret;
 }
 
@@ -800,120 +637,99 @@ void textoExt(float x, float y, const char *texto, int tamanioFuente,
 	DeleteObject(hf);
 }
 
-MWImage creaImagenBMP(const char *ruta)
+MiniWinImage *creaImagenBMP(const char *ruta)
 {
-	MWImage image;
+	MiniWinImage *image = (MiniWinImage *)malloc(sizeof(MiniWinImage));
 	BITMAP bitmap;
-	image.ruta[0] = 0;
-	image.alto = 0;
-	image.ancho = 0;
-	image.hBitmap = (HBITMAP)LoadImageA(NULL, ruta, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	if (image.hBitmap != NULL)
+	image->ruta[0] = 0;
+	image->alto = 0;
+	image->ancho = 0;
+	image->hBitmap = (HBITMAP)LoadImageA(NULL, ruta, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	if (image->hBitmap != NULL)
 	{
-		strcpy(image.ruta, ruta);
-		GetObject(image.hBitmap, sizeof(bitmap), &bitmap);
-		image.ancho = bitmap.bmWidth;
-		image.alto = bitmap.bmHeight;
+		strcpy(image->ruta, ruta);
+		GetObject(image->hBitmap, sizeof(bitmap), &bitmap);
+		image->ancho = bitmap.bmWidth;
+		image->alto = bitmap.bmHeight;
 	}
-	image.pos_x = 0;
-	image.pos_y = 0;
-	image.hBitmap_mask = NULL;
-	image.ruta_mask[0] = '\0';
+	image->pos_x = 0;
+	image->pos_y = 0;
+	image->hBitmap_mask = NULL;
+	image->ruta_mask[0] = '\0';
+
+	if (image->hBitmap == NULL)
+	{
+		free(image);
+		image = NULL;
+	}
 	return image;
 }
 
-MWImage creaImagenYMascaraBMP(const char *ruta, const char *ruta_mask)
+MiniWinImage *creaImagenYMascaraBMP(const char *ruta, const char *ruta_mask)
 {
-	MWImage image;
+	MiniWinImage *image = (MiniWinImage *)malloc(sizeof(MiniWinImage));
 	BITMAP bitmap;
-	image.ruta[0] = 0;
-	image.ruta_mask[0] = 0;
-	image.alto = 0;
-	image.ancho = 0;
-	image.hBitmap = (HBITMAP)LoadImageA(NULL, ruta, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	if (image.hBitmap != NULL)
+	image->ruta[0] = 0;
+	image->ruta_mask[0] = 0;
+	image->alto = 0;
+	image->ancho = 0;
+	image->hBitmap = (HBITMAP)LoadImageA(NULL, ruta, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	if (image->hBitmap != NULL)
 	{
-		strcpy(image.ruta, ruta);
-		GetObject(image.hBitmap, sizeof(bitmap), &bitmap);
-		image.ancho = bitmap.bmWidth;
-		image.alto = bitmap.bmHeight;
+		strcpy(image->ruta, ruta);
+		GetObject(image->hBitmap, sizeof(bitmap), &bitmap);
+		image->ancho = bitmap.bmWidth;
+		image->alto = bitmap.bmHeight;
 	}
-	image.pos_x = 0;
-	image.pos_y = 0;
+	image->pos_x = 0;
+	image->pos_y = 0;
 
-	image.hBitmap_mask = (HBITMAP)LoadImageA(NULL, ruta_mask, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	if (image.hBitmap != NULL)
+	image->hBitmap_mask = (HBITMAP)LoadImageA(NULL, ruta_mask, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	if (image->hBitmap != NULL)
 	{
-		strcpy(image.ruta_mask, ruta_mask);
+		strcpy(image->ruta_mask, ruta_mask);
+	}
+
+	if (image->hBitmap == NULL || image->hBitmap_mask == NULL)
+	{
+		free(image);
+		image = NULL;
 	}
 
 	return image;
 }
 
-void eliminaImagen(MWImage *imagen)
+void eliminaImagen(MiniWinImage *imagen)
 {
 	DeleteObject(imagen->hBitmap);
 	DeleteObject(imagen->hBitmap_mask);
+	free(imagen);
 }
 
-void __muestraImagen(MWImage imagen)
+void muestraImagen(MiniWinImage *imagen)
 {
 	HGDIOBJ oldBitmap;
-	HDC imagehdc = CreateCompatibleDC(NULL);
-	HDC imagehdc_mask = CreateCompatibleDC(NULL);
+	BITMAP bitmap;
+	HDC imagehdc;
 
-	if (imagen.hBitmap_mask != NULL)
+	if (imagen->hBitmap_mask != NULL)
 	{
-		oldBitmap = SelectObject(imagehdc_mask, imagen.hBitmap_mask);
-		BitBlt(hDCMem, imagen.pos_x, imagen.pos_y, imagen.ancho, imagen.alto, imagehdc_mask, 0, 0, SRCAND);
-		SelectObject(imagehdc_mask, oldBitmap);
-		DeleteObject(imagehdc_mask);
-		DeleteObject(oldBitmap);
-		if (imagen.hBitmap != NULL)
+		imagehdc = CreateCompatibleDC(NULL);
+		GetObject(imagen->hBitmap_mask, sizeof(bitmap), &bitmap);
+		oldBitmap = SelectObject(imagehdc, imagen->hBitmap_mask);
+		StretchBlt(hDCMem, imagen->pos_x, imagen->pos_y, imagen->ancho, imagen->alto, imagehdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCAND);
+		if (imagen->hBitmap != NULL)
 		{
-			oldBitmap = SelectObject(imagehdc, imagen.hBitmap);
-			BitBlt(hDCMem, imagen.pos_x, imagen.pos_y, imagen.ancho, imagen.alto, imagehdc, 0, 0, SRCPAINT);
-			SelectObject(imagehdc, oldBitmap);
-			DeleteObject(imagehdc);
-			DeleteObject(oldBitmap);
+			SelectObject(imagehdc, imagen->hBitmap);
+			StretchBlt(hDCMem, imagen->pos_x, imagen->pos_y, imagen->ancho, imagen->alto, imagehdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCPAINT);
 		}
-	}
-	else if (imagen.hBitmap != NULL)
-	{
-		oldBitmap = SelectObject(imagehdc, imagen.hBitmap);
-		BitBlt(hDCMem, imagen.pos_x, imagen.pos_y, imagen.ancho, imagen.alto, imagehdc, 0, 0, SRCCOPY);
 		SelectObject(imagehdc, oldBitmap);
 		DeleteObject(imagehdc);
 		DeleteObject(oldBitmap);
 	}
-}
-
-void muestraImagen(MWImage *imagen)
-{
-	HGDIOBJ oldBitmap;
-	BITMAP bitmap;
-	HDC imagehdc = CreateCompatibleDC(NULL);
-	HDC imagehdc_mask = CreateCompatibleDC(NULL);
-
-	if (imagen->hBitmap_mask != NULL)
-	{
-		GetObject(imagen->hBitmap_mask, sizeof(bitmap), &bitmap);
-		oldBitmap = SelectObject(imagehdc_mask, imagen->hBitmap_mask);
-		StretchBlt(hDCMem, imagen->pos_x, imagen->pos_y, imagen->ancho, imagen->alto, imagehdc_mask, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCAND);
-		SelectObject(imagehdc_mask, oldBitmap);
-		DeleteObject(imagehdc_mask);
-		DeleteObject(oldBitmap);
-		if (imagen->hBitmap != NULL)
-		{
-			oldBitmap = SelectObject(imagehdc, imagen->hBitmap);
-			StretchBlt(hDCMem, imagen->pos_x, imagen->pos_y, imagen->ancho, imagen->alto, imagehdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCPAINT);
-			SelectObject(imagehdc, oldBitmap);
-			DeleteObject(imagehdc);
-			DeleteObject(oldBitmap);
-		}
-	}
 	else if (imagen->hBitmap != NULL)
 	{
+		imagehdc = CreateCompatibleDC(NULL);
 		GetObject(imagen->hBitmap, sizeof(bitmap), &bitmap);
 		oldBitmap = SelectObject(imagehdc, imagen->hBitmap);
 		StretchBlt(hDCMem, imagen->pos_x, imagen->pos_y, imagen->ancho, imagen->alto, imagehdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
@@ -958,9 +774,6 @@ void color_fondo(Colores c)
 		_back_color = _colores[c];
 	else
 		_back_color = _colores[0];
-
-	borra();
-	refresca();
 }
 
 void color_fondo_rgb(int r, int g, int b)
@@ -971,8 +784,6 @@ void color_fondo_rgb(int r, int g, int b)
 										  : g,
 					  b < 0 ? 0 : b > 255 ? 255
 										  : b);
-	borra();
-	refresca();
 }
 
 int vancho()
@@ -995,7 +806,7 @@ void vredimensiona(int ancho, int alto)
 
 	frame_real(iWidth, iHeight, &w, &h);
 
-	//Centra la ventana
+	// Centra la ventana
 	xPos = (GetSystemMetrics(SM_CXSCREEN) - w) / 2;
 	yPos = (GetSystemMetrics(SM_CYSCREEN) - h) / 2;
 
