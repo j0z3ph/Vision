@@ -1,17 +1,19 @@
+''' NO FUNCIONA '''
+
 import pyfirmata2
 import time
 from esp32board import esp32
 
 # Creates a new board
 board = pyfirmata2.Board("/dev/cu.usbserial-0001", esp32, baudrate=115200)
-pin2 = board.get_pin("d:2:o")
+pin13 = board.get_pin("d:13:s")
+#board.servo_config(13)
+
+angle = 0
 
 while True:
-    pin2.write(1)
+    pin13.write(angle)
     time.sleep(1)
-    pin2.write(0)
-    time.sleep(1)
-
-
-# close the serial connection
-board.exit()
+    angle += 10
+    if angle >= 180:
+        angle = 0
