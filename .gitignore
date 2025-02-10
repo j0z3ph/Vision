@@ -402,3 +402,4 @@ FodyWeavers.xsd
 .vscode/
 .DS_Store
 *.exe
+Python/.DS_Store
