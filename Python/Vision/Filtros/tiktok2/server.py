@@ -1,29 +1,57 @@
 import socket
 import threading
+import socket, cv2, pickle, struct
+
 
 class Cliente:
     name = ""
     conn = None
     addr = None
 
+
 def clientthread(conn, addr):
-    #conn.send(bytes(f"Bienvenido {addr}\n", 'utf-8'))
+    # conn.send(bytes(f"Bienvenido {addr}\n", 'utf-8'))
+    
     while True:
-        message = conn.recv(BUFFER_SIZE)
-        if message:
-            broadcast(message, conn)
-                
-def setName(connection, name:str):
+        data = b""
+        payload_size = struct.calcsize("Q")
+        while len(data) < payload_size:
+            packet = conn.recv(BUFFER_SIZE)
+            if not packet:
+                break
+            data += packet
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack("Q", packed_msg_size)[0]
+
+        while len(data) < msg_size:
+            data += conn.recv(BUFFER_SIZE)
+
+        conn.send(b"OK")
+        
+        message = struct.pack("Q", len(data)) + data
+        for client in list_of_clients:
+            if client.conn != conn:
+                try:
+                    client.conn.sendall(message)
+                except:
+                    client.conn.close()
+                    list_of_clients.remove(client)
+
+
+def setName(connection, name: str):
     for client in list_of_clients:
         if client.conn == connection:
             client.name = name
             break
 
+
 def getName(connection) -> str:
     for client in list_of_clients:
-        if client.conn ==     connection:
+        if client.conn == connection:
             return client.name
     return ""
+
 
 def broadcast(message, connection):
     for client in list_of_clients:
@@ -34,15 +62,17 @@ def broadcast(message, connection):
                 client.conn.close()
                 remove(client)
 
+
 def remove(connection):
     if connection in list_of_clients:
         list_of_clients.remove(connection)
 
+
 if __name__ == "__main__":
     host = socket.gethostname()  # Esta función nos da el nombre de la máquina
-    #host = "0.0.0.0"
+    # host = "0.0.0.0"
     port = 65535
-    BUFFER_SIZE = 4*1024 
+    BUFFER_SIZE = 4 * 1024
     # Creamos un socket TCP
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -56,14 +86,16 @@ if __name__ == "__main__":
             nuevo_cliente = Cliente()
             nuevo_cliente.conn = conn
             nuevo_cliente.addr = addr
-            #list_of_clients.append(conn)  # Agregamos a la lista de clientes
+            # list_of_clients.append(conn)  # Agregamos a la lista de clientes
             list_of_clients.append(nuevo_cliente)  # Agregamos a la lista de clientes
             print(f"Cliente conectado: {addr}")
             # Creamos y ejecutamos el hilo para atender al cliente
-            threading.Thread(target=clientthread, args=(conn, addr)).start()
+            threading.Thread(
+                target=clientthread, args=(conn, addr), daemon=True
+            ).start()
     except KeyboardInterrupt:
         print("Caught keyboard interrupt, exiting")
     finally:
         conn.close()
-        server.close()   
+        server.close()
     print("Conexión terminada.")

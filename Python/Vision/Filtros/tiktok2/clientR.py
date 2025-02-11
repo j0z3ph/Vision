@@ -2,10 +2,10 @@ import socket,cv2, pickle,struct
 import numpy as np
 
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-#host_ip = '127.0.0.1' 
-#port = 65535
-host_ip = '34.71.154.190' 
-port = 80
+host_ip = '127.0.0.1' 
+port = 65535
+#host_ip = '34.71.154.190' 
+#port = 80
 client_socket.connect((host_ip,port)) # a tuple
 
 data = b""
