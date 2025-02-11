@@ -29,7 +29,7 @@ def broadcast(message, connection):
     for client in list_of_clients:
         if client.conn != connection:
             try:
-                client.conn.send(message)
+                client.conn.sendall(message)
             except:
                 client.conn.close()
                 remove(client)

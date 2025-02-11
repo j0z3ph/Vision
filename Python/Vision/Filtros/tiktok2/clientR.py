@@ -1,9 +1,10 @@
 import socket,cv2, pickle,struct
+import numpy as np
 
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 #host_ip = '127.0.0.1' 
 #port = 65535
-host_ip = '35.188.2.248' 
+host_ip = '34.71.154.190' 
 port = 80
 client_socket.connect((host_ip,port)) # a tuple
 
@@ -24,7 +25,9 @@ while True:
     frame_data = data[:msg_size]
     data  = data[msg_size:]
     frame = pickle.loads(frame_data)
-    cv2.imshow("RECEIVING VIDEO",frame)
+    nparr = np.fromstring(frame, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    cv2.imshow("RECEIVING VIDEO",img)
     key = cv2.waitKey(1) & 0xFF
     if key  == ord('q'):
         break
