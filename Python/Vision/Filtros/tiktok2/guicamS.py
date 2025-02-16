@@ -9,11 +9,11 @@ import socket, pickle, struct
 
 
 class VideoThread(QThread):
-    change_pixmap_signal = pyqtSignal(np.ndarray)
+    new_frame = pyqtSignal(np.ndarray)
     showMustache = False
     showGlasses = False
 
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
         self._run_flag = True
         self.mustache = cv2.imread("imgs/mustache.png", cv2.IMREAD_UNCHANGED)
@@ -21,6 +21,7 @@ class VideoThread(QThread):
         self.clasificador = cv2.CascadeClassifier(
             "haarcascades/haarcascade_frontalface_alt2.xml"
         )
+        self.client_socket = socket
 
     def run(self):
         cap = cv2.VideoCapture(0)
@@ -31,7 +32,7 @@ class VideoThread(QThread):
                 ret, cv_img = cap.read()
                 if ret:
                     cv_img = cv2.resize(
-                        cv_img, (cv_img.shape[1] // 4, cv_img.shape[0] // 4)
+                        cv_img, (cv_img.shape[1] // 2, cv_img.shape[0] // 2)
                     )
                     faces = self.clasificador.detectMultiScale(cv_img, 1.3, 5)
                     for x, y, w, h in faces:
@@ -48,7 +49,13 @@ class VideoThread(QThread):
                             )
 
                         # cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-                    self.change_pixmap_signal.emit(cv_img)
+                    data = cv2.imencode('.jpg', cv_img)[1].tobytes()
+                    a = pickle.dumps(data)
+                    message = struct.pack("Q",len(a))+a
+                    self.client_socket.sendall(message)
+                    while self.client_socket.recv(1024).decode() != "OK":
+                        pass
+                    self.new_frame.emit(cv_img)
         cap.release()
 
     def stop(self):
@@ -93,20 +100,56 @@ class VideoThread(QThread):
 
         background[bg_y : bg_y + h, bg_x : bg_x + w] = composite
 
+class RemoteVideoReceiver(QThread):
+    video_received = pyqtSignal(np.ndarray)
+
+    def __init__(self, socket):
+        super().__init__()
+        self._run_flag = True
+        self.client_socket = socket
+
+    def run(self):
+        while self._run_flag:
+            data = b""
+            payload_size = struct.calcsize("Q")
+            
+            while len(data) < payload_size:
+                packet = self.client_socket.recv(4 * 1024)  # 4K
+                if not packet:
+                    break
+                data += packet
+            packed_msg_size = data[:payload_size]
+            data = data[payload_size:]
+            msg_size = struct.unpack("Q", packed_msg_size)[0]
+
+            while len(data) < msg_size:
+                data += self.client_socket.recv(4 * 1024)
+            frame_data = data[:msg_size]
+            data = data[msg_size:]
+            frame = pickle.loads(frame_data)
+            nparr = np.fromstring(frame, np.uint8)
+            cv_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            self.video_received.emit(cv_img)
+
+    def stop(self):
+        self._run_flag = False
+        self.wait()
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
         self.setupUi(self)
+        self.setWindowTitle("Video Sender")
+        
         self.client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         #host_ip = '127.0.0.1' 
         #port = 65535
-        host_ip = '35.188.2.248' 
+        host_ip = '34.31.147.126' 
         port = 80
         self.client_socket.connect((host_ip,port))
         
-        self.vthread = VideoThread()
-        self.vthread.change_pixmap_signal.connect(self.update_image)
+        self.vthread = VideoThread(self.client_socket)
+        self.vthread.new_frame.connect(self.update_image)
         # start the thread
         self.vthread.start()
         self.btnGlasses.clicked.connect(self.addGlasses)
@@ -123,9 +166,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
 
     def update_image(self, cv_img):
-        a = pickle.dumps(cv_img)
-        message = struct.pack("Q",len(a))+a
-        self.client_socket.sendall(message)
         self.cv_img = cv_img
         self.lbl_image.setPixmap(self.convert_cv_qt(self.cv_img))
 

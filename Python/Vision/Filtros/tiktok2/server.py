@@ -26,8 +26,6 @@ def clientthread(conn, addr):
 
         while len(data) < msg_size:
             data += conn.recv(BUFFER_SIZE)
-
-        conn.send(b"OK")
         
         message = struct.pack("Q", len(data)) + data
         for client in list_of_clients:
@@ -37,36 +35,8 @@ def clientthread(conn, addr):
                 except:
                     client.conn.close()
                     list_of_clients.remove(client)
-
-
-def setName(connection, name: str):
-    for client in list_of_clients:
-        if client.conn == connection:
-            client.name = name
-            break
-
-
-def getName(connection) -> str:
-    for client in list_of_clients:
-        if client.conn == connection:
-            return client.name
-    return ""
-
-
-def broadcast(message, connection):
-    for client in list_of_clients:
-        if client.conn != connection:
-            try:
-                client.conn.sendall(message)
-            except:
-                client.conn.close()
-                remove(client)
-
-
-def remove(connection):
-    if connection in list_of_clients:
-        list_of_clients.remove(connection)
-
+                    
+        conn.send(b"OK") # Confirmacion al emisor
 
 if __name__ == "__main__":
     host = socket.gethostname()  # Esta función nos da el nombre de la máquina
