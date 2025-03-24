@@ -1,7 +1,7 @@
-from PyQt6 import QtGui, QtWidgets
-from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.QtWidgets import QMainWindow
-from Ui_imagenes import *
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtWidgets import QMainWindow
+from imagenes_ui import *
 import numpy as np
 import socket, cv2, pickle, struct
 import sys
@@ -10,7 +10,7 @@ socket.setdefaulttimeout(2)
 
 
 class VideoThread(QThread):
-    new_frame = pyqtSignal(np.ndarray)
+    new_frame = Signal(np.ndarray)
     showMustache = False
     showGlasses = False
 
@@ -103,7 +103,7 @@ class VideoThread(QThread):
 
 
 class RemoteVideoReceiver(QThread):
-    video_received = pyqtSignal(np.ndarray)
+    video_received = Signal(np.ndarray)
 
     def __init__(self, socket):
         super().__init__()
@@ -159,10 +159,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle("Video Receiver")
 
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # host_ip = '127.0.0.1'
-        # port = 65535
-        host_ip = "34.31.147.126"
-        port = 80
+        host_ip = '127.0.0.1'
+        port = 65535
+        #host_ip = "34.31.147.126"
+        #port = 80
         self.client_socket.connect((host_ip, port))
 
         self.vthread = RemoteVideoReceiver(self.client_socket)
