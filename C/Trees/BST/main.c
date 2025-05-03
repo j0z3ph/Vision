@@ -12,15 +12,20 @@
 #include <stdlib.h>
 #include <time.h>
 #include "BST.h"
+#include "HT.h"
 
+#define TABLE 100000
 #define N 100000000
 
 int main()
 {
     BinarySearchTree *bst = newBST();
+    HashTable *ht = newHashTable(TABLE);
     Timer *timer = newTimer();
+    size_t aux;
     int *arr = NULL, cont = 0, val, found;
     Node *res;
+    Data *resHT;
 
     srand(time(NULL));
 
@@ -45,6 +50,18 @@ int main()
             arr = realloc(arr, sizeof(int) * (cont + 1));
         arr[cont] = rand() % N;
         cont++;
+    }
+
+    timer->stop(&timer);
+
+    printf("%lf ms\n", timer->elapsedTime(&timer));
+
+    timer->start(&timer);
+
+    for (size_t i = 0; i < N; i++)
+    {
+        aux = rand() % N;
+        ht->addData(&ht, aux, aux);
     }
 
     timer->stop(&timer);
@@ -81,14 +98,25 @@ int main()
             }
         }
         if (found)
-            printf("Encontrado (%i) en abb\n", val);
+            printf("Encontrado (%i) en arreglo\n", val);
         else
         {
             timer->stop(&timer);
 
             printf("%lf ms. ", timer->elapsedTime(&timer));
-            printf("No encontrado en abb\n");
+            printf("No encontrado en arreglo\n");
         }
+
+        timer->start(&timer);
+        resHT = ht->searchData(&ht, rand()%N);
+        timer->stop(&timer);
+
+        printf("%lf ms. ", timer->elapsedTime(&timer));
+
+        if (resHT != NULL)
+            printf("Encontrado (%.0lf) en ht\n", resHT->data);
+        else
+            printf("No encontrado en ht\n");
     }
 
     bst->clean(&bst);
