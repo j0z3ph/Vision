@@ -11,11 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "BST.h"
 #include "HT.h"
 
-#define TABLE 100000
+#define TABLE pow(2,17)
+//#define TABLE 8
 #define N 100000000
+//#define N 50
 
 int main()
 {
@@ -67,6 +70,10 @@ int main()
     timer->stop(&timer);
 
     printf("%lf ms\n", timer->elapsedTime(&timer));
+
+    //ht->printHashTable(&ht);
+
+    //return 0;
 
     printf("Busquedas:\n");
 
