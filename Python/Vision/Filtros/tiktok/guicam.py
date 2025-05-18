@@ -1,14 +1,14 @@
-from PyQt6 import QtGui, QtWidgets
-from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.QtWidgets import QMainWindow
-from Ui_imagenes import *
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtWidgets import QMainWindow
+from imagenes_ui import *
 import numpy as np
 import cv2
 import sys
 
 
 class VideoThread(QThread):
-    change_pixmap_signal = pyqtSignal(np.ndarray)
+    change_pixmap_signal = Signal(np.ndarray)
     showMustache = False
     showGlasses = False
 
