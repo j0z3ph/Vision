@@ -1,14 +1,13 @@
-from PyQt6.QtWidgets import QMainWindow, QDialog
-from Ui_principal import *
-from Ui_conectar import *
-from PyQt6.uic import loadUi
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtWidgets import QMainWindow, QDialog
+from principal_ui import *
+from conectar_ui import *
+from PySide6.QtCore import QThread, Signal
 import sys
 import socket
 
 class ThreadSocket(QThread):
     global connected
-    signal_message = pyqtSignal(str)
+    signal_message = Signal(str)
     def __init__(self, host, port, name):
         global connected
         super().__init__()
@@ -84,13 +83,12 @@ class MiDialogo(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        #loadUi("dialogo.ui", self)
 
 if __name__ == "__main__":
     BUFFER_SIZE = 1024  # Usamos un número pequeño para tener una respuesta rápida
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connected = False
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
