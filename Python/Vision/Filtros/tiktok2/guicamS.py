@@ -7,6 +7,8 @@ import cv2
 import sys
 import socket, pickle, struct
 
+import mediapipe as mp
+
 
 class VideoThread(QThread):
     new_frame = Signal(np.ndarray)
@@ -39,6 +41,37 @@ class VideoThread(QThread):
                     cv_img = cv2.resize(
                         cv_img, (cv_img.shape[1] // 2, cv_img.shape[0] // 2)
                     )
+                    
+                    ### MEDIAPIPE
+                    
+                    # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_img)
+                    # face_detector_result = detector.detect(mp_image)
+
+                    # for detection in face_detector_result.detections:
+                    #     # Draw bounding_box
+                        
+                    #     bbox = detection.bounding_box
+                        
+                    #     w = bbox.width
+                    #     h = bbox.height
+                    #     x = bbox.origin_x
+                    #     y = bbox.origin_y
+                        
+                    #     if self.showGlasses:
+                    #         tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
+                    #         self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.1))
+
+                    #     if self.showMustache:
+                    #         tmp = cv2.resize(
+                    #             self.mustache, (int(w * 0.8), int(h * 0.2))
+                    #         )
+                    #         self.add_transparent_image(
+                    #             cv_img, tmp, x + int(w * 0.1), y + int(h * 0.55)
+                    #         )
+                        
+                        
+                    #### HAAR CASCADES    
+                    
                     faces = self.clasificador.detectMultiScale(cv_img, 1.3, 5)
                     for x, y, w, h in faces:
                         if self.showGlasses:
@@ -53,7 +86,8 @@ class VideoThread(QThread):
                                 cv_img, tmp, x + int(w * 0.1), y + int(h * 0.65)
                             )
 
-                        # cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                        
+                        cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
                     data = cv2.imencode('.jpg', cv_img)[1].tobytes()
                     a = pickle.dumps(data)
                     message = struct.pack("Q",len(a))+a
@@ -186,6 +220,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
+    model_path = 'mp/blaze_face_short_range.tflite'
+
+    BaseOptions = mp.tasks.BaseOptions
+    FaceDetector = mp.tasks.vision.FaceDetector
+    FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
+    VisionRunningMode = mp.tasks.vision.RunningMode
+
+    # Create a face detector instance with the video mode:
+    options = FaceDetectorOptions(
+        base_options=BaseOptions(model_asset_path=model_path),
+        running_mode=VisionRunningMode.IMAGE)
+    
+    detector = FaceDetector.create_from_options(options)
+    
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     window.show()

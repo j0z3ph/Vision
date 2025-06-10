@@ -7,6 +7,7 @@ class Cliente:
     name = ""
     conn = None
     addr = None
+    ctype = ""
 
 
 def clientthread(conn, addr):
@@ -14,6 +15,11 @@ def clientthread(conn, addr):
     client_type = conn.recv(BUFFER_SIZE).decode()
     if(client_type == "Emisor"):
         conn.send(b"OK")
+        for client in list_of_clients:
+            if client.conn == conn:
+                client.ctype = "Emisor"
+                break
+        
         while True:
             data = b""
             payload_size = struct.calcsize("Q")
@@ -31,7 +37,7 @@ def clientthread(conn, addr):
             
             message = struct.pack("Q", len(data)) + data
             for client in list_of_clients:
-                if client.conn != conn:
+                if client.conn != conn and client.ctype == "Receiver":
                     try:
                         client.conn.sendall(message)
                     except Exception as e:
@@ -43,6 +49,10 @@ def clientthread(conn, addr):
             
     elif client_type == "Receiver":
         conn.send(b"OK")
+        for client in list_of_clients:
+            if client.conn == conn:
+                client.ctype = "Receiver"
+                break
         while True:
             msg = conn.recv(BUFFER_SIZE).decode()
             if msg:
