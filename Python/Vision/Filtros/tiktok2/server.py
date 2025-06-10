@@ -11,32 +11,45 @@ class Cliente:
 
 def clientthread(conn, addr):
     # conn.send(bytes(f"Bienvenido {addr}\n", 'utf-8'))
-    
-    while True:
-        data = b""
-        payload_size = struct.calcsize("Q")
-        while len(data) < payload_size:
-            packet = conn.recv(BUFFER_SIZE)
-            if not packet:
-                break
-            data += packet
-        packed_msg_size = data[:payload_size]
-        data = data[payload_size:]
-        msg_size = struct.unpack("Q", packed_msg_size)[0]
+    client_type = conn.recv(BUFFER_SIZE).decode()
+    if(client_type == "Emisor"):
+        conn.send(b"OK")
+        while True:
+            data = b""
+            payload_size = struct.calcsize("Q")
+            while len(data) < payload_size:
+                packet = conn.recv(BUFFER_SIZE)
+                if not packet:
+                    break
+                data += packet
+            packed_msg_size = data[:payload_size]
+            data = data[payload_size:]
+            msg_size = struct.unpack("Q", packed_msg_size)[0]
 
-        while len(data) < msg_size:
-            data += conn.recv(BUFFER_SIZE)
-        
-        message = struct.pack("Q", len(data)) + data
-        for client in list_of_clients:
-            if client.conn != conn:
-                try:
-                    client.conn.sendall(message)
-                except:
-                    client.conn.close()
-                    list_of_clients.remove(client)
+            while len(data) < msg_size:
+                data += conn.recv(BUFFER_SIZE)
+            
+            message = struct.pack("Q", len(data)) + data
+            for client in list_of_clients:
+                if client.conn != conn:
+                    try:
+                        client.conn.sendall(message)
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}")
+                        client.conn.close()
+                        list_of_clients.remove(client)
+                        
+            conn.send(b"OK") # Confirmacion al emisor
+            
+    elif client_type == "Receiver":
+        conn.send(b"OK")
+        while True:
+            msg = conn.recv(BUFFER_SIZE).decode()
+            if msg:
+                for client in list_of_clients:
+                    if client.conn != conn:
+                        client.conn.sendall(msg)
                     
-        conn.send(b"OK") # Confirmacion al emisor
 
 if __name__ == "__main__":
     host = socket.gethostname()  # Esta función nos da el nombre de la máquina

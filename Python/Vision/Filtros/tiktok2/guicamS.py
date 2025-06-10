@@ -22,6 +22,11 @@ class VideoThread(QThread):
             "haarcascades/haarcascade_frontalface_alt2.xml"
         )
         self.client_socket = socket
+        
+        # Init Message
+        self.client_socket.send(b"Emisor")
+        while self.client_socket.recv(1024).decode() != "OK":
+            pass
 
     def run(self):
         cap = cv2.VideoCapture(0)

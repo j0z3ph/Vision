@@ -109,6 +109,11 @@ class RemoteVideoReceiver(QThread):
         super().__init__()
         self._run_flag = True
         self.client_socket = socket
+        
+        # Init Message
+        self.client_socket.send(b"Receiver")
+        while self.client_socket.recv(1024).decode() != "OK":
+            pass
 
     def run(self):
         while self._run_flag:
