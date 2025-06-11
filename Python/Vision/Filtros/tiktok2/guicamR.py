@@ -8,100 +8,6 @@ import sys
 
 socket.setdefaulttimeout(2)
 
-
-class VideoThread(QThread):
-    new_frame = Signal(np.ndarray)
-    showMustache = False
-    showGlasses = False
-
-    def __init__(self, socket):
-        super().__init__()
-        self._run_flag = True
-        self.mustache = cv2.imread("imgs/mustache.png", cv2.IMREAD_UNCHANGED)
-        self.glasses = cv2.imread("imgs/lentes.png", cv2.IMREAD_UNCHANGED)
-        self.clasificador = cv2.CascadeClassifier(
-            "haarcascades/haarcascade_frontalface_alt2.xml"
-        )
-        self.client_socket = socket
-
-    def run(self):
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            print("Cannot open camera")
-        else:
-            while self._run_flag:
-                ret, cv_img = cap.read()
-                if ret:
-                    cv_img = cv2.resize(
-                        cv_img, (cv_img.shape[1] // 2, cv_img.shape[0] // 2)
-                    )
-                    faces = self.clasificador.detectMultiScale(cv_img, 1.3, 5)
-                    for x, y, w, h in faces:
-                        if self.showGlasses:
-                            tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
-                            self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.3))
-
-                        if self.showMustache:
-                            tmp = cv2.resize(
-                                self.mustache, (int(w * 0.8), int(h * 0.2))
-                            )
-                            self.add_transparent_image(
-                                cv_img, tmp, x + int(w * 0.1), y + int(h * 0.65)
-                            )
-
-                        # cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-                    data = cv2.imencode(".jpg", cv_img)[1].tobytes()
-                    a = pickle.dumps(data)
-                    message = struct.pack("Q", len(a)) + a
-                    self.client_socket.sendall(message)
-                    while self.client_socket.recv(1024).decode() != "OK":
-                        pass
-                    self.new_frame.emit(cv_img)
-        cap.release()
-
-    def stop(self):
-        self._run_flag = False
-        self.wait()
-
-    def add_transparent_image(
-        self, background, foreground, x_offset=None, y_offset=None
-    ):
-        """
-        https://stackoverflow.com/questions/40895785/using-opencv-to-overlay-transparent-image-onto-another-image
-        """
-        bg_h, bg_w, bg_channels = background.shape
-        fg_h, fg_w, fg_channels = foreground.shape
-
-        if x_offset is None:
-            x_offset = (bg_w - fg_w) // 2
-        if y_offset is None:
-            y_offset = (bg_h - fg_h) // 2
-
-        w = min(fg_w, bg_w, fg_w + x_offset, bg_w - x_offset)
-        h = min(fg_h, bg_h, fg_h + y_offset, bg_h - y_offset)
-
-        if w < 1 or h < 1:
-            return
-
-        bg_x = max(0, x_offset)
-        bg_y = max(0, y_offset)
-        fg_x = max(0, x_offset * -1)
-        fg_y = max(0, y_offset * -1)
-        foreground = foreground[fg_y : fg_y + h, fg_x : fg_x + w]
-        background_subsection = background[bg_y : bg_y + h, bg_x : bg_x + w]
-
-        foreground_colors = foreground[:, :, :3]
-        alpha_channel = foreground[:, :, 3] / 255  # 0-255 => 0.0-1.0
-
-        alpha_mask = np.dstack((alpha_channel, alpha_channel, alpha_channel))
-
-        composite = (
-            background_subsection * (1 - alpha_mask) + foreground_colors * alpha_mask
-        )
-
-        background[bg_y : bg_y + h, bg_x : bg_x + w] = composite
-
-
 class RemoteVideoReceiver(QThread):
     video_received = Signal(np.ndarray)
 
@@ -173,17 +79,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vthread.video_received.connect(self.update_image)
         # start the thread
         self.vthread.start()
-        self.btnGlasses.clicked.connect(self.addGlasses)
-        self.btnMustach.clicked.connect(self.addMustache)
         self.btnGlasses.setDisabled(True)
         self.btnMustach.setDisabled(True)
-
-    def addMustache(self):
-        self.vthread.showMustache = not self.vthread.showMustache
-
-    def addGlasses(self):
-        self.vthread.showGlasses = not self.vthread.showGlasses
-
+        self.btnGlasses.setVisible(False)
+        self.btnMustach.setVisible(False)
+                
     def closeEvent(self, event):
         self.vthread.stop()
         event.accept()

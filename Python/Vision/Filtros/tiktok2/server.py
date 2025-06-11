@@ -62,8 +62,8 @@ def clientthread(conn, addr):
                     
 
 if __name__ == "__main__":
-    host = socket.gethostname()  # Esta función nos da el nombre de la máquina
-    # host = "0.0.0.0"
+    #host = socket.gethostname()  # Esta función nos da el nombre de la máquina
+    host = "0.0.0.0"
     port = 65535
     BUFFER_SIZE = 4 * 1024
     # Creamos un socket TCP

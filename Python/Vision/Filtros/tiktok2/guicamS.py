@@ -9,6 +9,7 @@ import socket, pickle, struct
 
 import mediapipe as mp
 
+CNN = False
 
 class VideoThread(QThread):
     new_frame = Signal(np.ndarray)
@@ -20,9 +21,11 @@ class VideoThread(QThread):
         self._run_flag = True
         self.mustache = cv2.imread("imgs/mustache.png", cv2.IMREAD_UNCHANGED)
         self.glasses = cv2.imread("imgs/lentes.png", cv2.IMREAD_UNCHANGED)
-        self.clasificador = cv2.CascadeClassifier(
-            "haarcascades/haarcascade_frontalface_alt2.xml"
-        )
+        if not CNN:
+            self.clasificador = cv2.CascadeClassifier(
+                "haarcascades/haarcascade_frontalface_alt2.xml"
+            )
+            
         self.client_socket = socket
         
         # Init Message
@@ -42,52 +45,52 @@ class VideoThread(QThread):
                         cv_img, (cv_img.shape[1] // 2, cv_img.shape[0] // 2)
                     )
                     
-                    ### MEDIAPIPE
+                    if CNN:
                     
-                    # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_img)
-                    # face_detector_result = detector.detect(mp_image)
+                        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_img)
+                        face_detector_result = detector.detect(mp_image)
 
-                    # for detection in face_detector_result.detections:
-                    #     # Draw bounding_box
-                        
-                    #     bbox = detection.bounding_box
-                        
-                    #     w = bbox.width
-                    #     h = bbox.height
-                    #     x = bbox.origin_x
-                    #     y = bbox.origin_y
-                        
-                    #     if self.showGlasses:
-                    #         tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
-                    #         self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.1))
+                        for detection in face_detector_result.detections:
+                            # Draw bounding_box
+                            
+                            bbox = detection.bounding_box
+                            
+                            w = bbox.width
+                            h = bbox.height
+                            x = bbox.origin_x
+                            y = bbox.origin_y
+                            
+                            if self.showGlasses:
+                                tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
+                                self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.1))
 
-                    #     if self.showMustache:
-                    #         tmp = cv2.resize(
-                    #             self.mustache, (int(w * 0.8), int(h * 0.2))
-                    #         )
-                    #         self.add_transparent_image(
-                    #             cv_img, tmp, x + int(w * 0.1), y + int(h * 0.55)
-                    #         )
+                            if self.showMustache:
+                                tmp = cv2.resize(
+                                    self.mustache, (int(w * 0.8), int(h * 0.2))
+                                )
+                                self.add_transparent_image(
+                                    cv_img, tmp, x + int(w * 0.1), y + int(h * 0.55)
+                                )
+                            
                         
-                        
-                    #### HAAR CASCADES    
+                    else:  
                     
-                    faces = self.clasificador.detectMultiScale(cv_img, 1.3, 5)
-                    for x, y, w, h in faces:
-                        if self.showGlasses:
-                            tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
-                            self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.3))
+                        faces = self.clasificador.detectMultiScale(cv_img, 1.3, 5)
+                        for x, y, w, h in faces:
+                            if self.showGlasses:
+                                tmp = cv2.resize(self.glasses, (w, int(h * 0.2)))
+                                self.add_transparent_image(cv_img, tmp, x, y + int(h * 0.3))
 
-                        if self.showMustache:
-                            tmp = cv2.resize(
-                                self.mustache, (int(w * 0.8), int(h * 0.2))
-                            )
-                            self.add_transparent_image(
-                                cv_img, tmp, x + int(w * 0.1), y + int(h * 0.65)
-                            )
+                            if self.showMustache:
+                                tmp = cv2.resize(
+                                    self.mustache, (int(w * 0.8), int(h * 0.2))
+                                )
+                                self.add_transparent_image(
+                                    cv_img, tmp, x + int(w * 0.1), y + int(h * 0.65)
+                                )
 
-                        
-                        cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                            
+                    cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
                     data = cv2.imencode('.jpg', cv_img)[1].tobytes()
                     a = pickle.dumps(data)
                     message = struct.pack("Q",len(a))+a
@@ -139,40 +142,6 @@ class VideoThread(QThread):
 
         background[bg_y : bg_y + h, bg_x : bg_x + w] = composite
 
-class RemoteVideoReceiver(QThread):
-    video_received = Signal(np.ndarray)
-
-    def __init__(self, socket):
-        super().__init__()
-        self._run_flag = True
-        self.client_socket = socket
-
-    def run(self):
-        while self._run_flag:
-            data = b""
-            payload_size = struct.calcsize("Q")
-            
-            while len(data) < payload_size:
-                packet = self.client_socket.recv(4 * 1024)  # 4K
-                if not packet:
-                    break
-                data += packet
-            packed_msg_size = data[:payload_size]
-            data = data[payload_size:]
-            msg_size = struct.unpack("Q", packed_msg_size)[0]
-
-            while len(data) < msg_size:
-                data += self.client_socket.recv(4 * 1024)
-            frame_data = data[:msg_size]
-            data = data[msg_size:]
-            frame = pickle.loads(frame_data)
-            nparr = np.fromstring(frame, np.uint8)
-            cv_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            self.video_received.emit(cv_img)
-
-    def stop(self):
-        self._run_flag = False
-        self.wait()
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
@@ -220,20 +189,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
-    model_path = 'mp/blaze_face_short_range.tflite'
-
-    BaseOptions = mp.tasks.BaseOptions
-    FaceDetector = mp.tasks.vision.FaceDetector
-    FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
-    VisionRunningMode = mp.tasks.vision.RunningMode
-
-    # Create a face detector instance with the video mode:
-    options = FaceDetectorOptions(
-        base_options=BaseOptions(model_asset_path=model_path),
-        running_mode=VisionRunningMode.IMAGE)
     
-    detector = FaceDetector.create_from_options(options)
-    
+    if CNN:
+        model_path = 'mp/blaze_face_short_range.tflite'
+
+        BaseOptions = mp.tasks.BaseOptions
+        FaceDetector = mp.tasks.vision.FaceDetector
+        FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
+        VisionRunningMode = mp.tasks.vision.RunningMode
+
+        # Create a face detector instance with the video mode:
+        options = FaceDetectorOptions(
+            base_options=BaseOptions(model_asset_path=model_path),
+            running_mode=VisionRunningMode.IMAGE)
+        
+        detector = FaceDetector.create_from_options(options)
+        
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     window.show()
