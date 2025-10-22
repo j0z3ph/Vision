@@ -3,70 +3,79 @@ from PySide6 import QtWidgets
 from PySide6.QtCore import QThread, Signal
 from Test_ui import *
 import sys
-import simplecontroller as sc
-import time
+import socket
 
-
-class ThreadAnalogIn(QThread):
-    value = Signal(float)
-    
-    def __init__(self, board:sc.Board, pin:int):
+class ThreadSocket(QThread):
+    global connected
+    analog_read = Signal(int)
+    def __init__(self, host, port):
+        global connected
         super().__init__()
-        self.board = board
-        self.pin = pin
-        self.board.pinMode(pin, sc.INPUT)
-        self.running = True
+        server.connect((host, port))
+        connected = True
 
     def run(self):
-        while(self.running):
-            value =self.board.analogRead(self.pin)
-            time.sleep(0.1)
-            self.value.emit(value)
-
+        global connected
+        try:
+            while connected:
+                message = server.recv(BUFFER_SIZE).decode("utf-8")
+                if message:
+                    try:
+                        if message.startswith("<analog_read>"):
+                            value = int(message.removeprefix("<analog_read>"))
+                            self.analog_read.emit(value)      
+                    except ValueError:
+                        pass
+                    
+        except ...:
+            pass
+        finally:
+            server.close()
+            connected = False
+        
     def stop(self):
-        self.running = False
+        global connected
+        connected = False
         self.wait()
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
         self.setupUi(self)
-        self.esp32 = sc.Board("COM4")
-        self.LED = 2
-        self.ANALOGIN = 13
         self.encendido = False
         self.btnLed.clicked.connect(self.digital_write)
         self.dial.valueChanged.connect(self.analog_write)
-        self.analogInThread = ThreadAnalogIn(self.esp32, self.ANALOGIN)
-        self.analogInThread.value.connect(self.analog_read)
+        self.analogInThread = ThreadSocket("3.149.222.108", 80)
+        self.analogInThread.analog_read.connect(self.analog_read)
         self.analogInThread.start()
     
     def analog_read(self, value):
-        self.progressBar.setValue(value * 100)
+        self.progressBar.setValue(value * (100 / 4096))
     
     def analog_write(self):
-        self.esp32.pinMode(self.LED, sc.OUTPUT)
-        value = self.dial.value() / self.dial.maximum()
-        self.esp32.analogWrite(self.LED, value)
-    
+        value = self.dial.value()
+        server.send(bytes('<analog_write>' + str(value), 'utf-8'))
+        
     def digital_write(self):
-        self.esp32.pinMode(self.LED, sc.OUTPUT)
         if(self.encendido):
-            self.esp32.digitalWrite(self.LED, False)
+            server.send(bytes('<digital_write>off', 'utf-8'))
             self.btnLed.setText("Prender")
             self.encendido = False
         else:
-            self.esp32.digitalWrite(self.LED, True)
+            server.send(bytes('<digital_write>on', 'utf-8'))
             self.btnLed.setText("Apagar")
             self.encendido = True
         
     
     def closeEvent(self, event):
-        self.esp32.close()
         self.analogInThread.stop()
         return super().closeEvent(event)
     
 if __name__ == "__main__":
+    BUFFER_SIZE = 1024  # Usamos un número pequeño para tener una respuesta rápida
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connected = False
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     window.show()

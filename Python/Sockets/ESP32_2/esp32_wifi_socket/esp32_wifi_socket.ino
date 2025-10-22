@@ -1,4 +1,8 @@
 #include <WiFi.h>
+#define ANALOG_IN_PORT 32
+#define DIGITAL_OUT_PORT 2
+#define ANALOG_OUT_PORT 2
+
 
 TaskHandle_t Task1;
 TaskHandle_t Task2;
@@ -15,7 +19,8 @@ const char* ip = "3.149.222.108";
 void setup() {
   Serial.begin(115200);
 
-  pinMode(2, OUTPUT);
+  pinMode(DIGITAL_OUT_PORT, OUTPUT);
+  pinMode(ANALOG_IN_PORT, INPUT);
 
   Serial.println("Conectando a Internet");
   WiFi.begin(ssid, password);
@@ -69,12 +74,14 @@ void loop() {
 void Task1code(void* pvParameters) {
   Serial.print("Tarea 1 corriendo en el core ");
   Serial.println(xPortGetCoreID());
+  int analogread;
   while (1) {
     if (localClient.connected()) {
-      localClient.print("Estoy listo!");
-      // TODO: lectura de puerto analogico y digital
+      analogread = analogRead(ANALOG_IN_PORT);
+      Serial.println(analogread);
+      localClient.print("<analog_read>" + String(analogread));
     }
-    delay(10000);
+    delay(100);
   }
 }
 
@@ -85,13 +92,17 @@ void Task2code(void* pvParameters) {
 
   while (1) {
     if (localClient.connected()) {
-      // TODO: lectura de comandos, aplicaciones de señales digitales y analogicas
       while (!localClient.available());
       String str = localClient.readStringUntil('\n');
-      if(str.startsWith("<command>on")) {
-        digitalWrite(2, HIGH);
-      } else if(str.startsWith("<command>off")) {
-        digitalWrite(2, LOW);
+      if(str.startsWith("<digital_write>on")) {
+        pinMode(DIGITAL_OUT_PORT, OUTPUT);
+        digitalWrite(DIGITAL_OUT_PORT, HIGH);
+      } else if(str.startsWith("<digital_write>off")) {
+        pinMode(DIGITAL_OUT_PORT, OUTPUT);
+        digitalWrite(DIGITAL_OUT_PORT, LOW);
+      } else if(str.startsWith("<analog_write>")) {
+        str.remove(0, 14);
+        analogWrite(ANALOG_OUT_PORT, str.toInt());
       } else {
         Serial.println(str);
       }

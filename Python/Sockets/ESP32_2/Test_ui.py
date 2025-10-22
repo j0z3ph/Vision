@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'Test.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -31,7 +31,7 @@ class Ui_MainWindow(object):
         self.dial = QDial(self.centralwidget)
         self.dial.setObjectName(u"dial")
         self.dial.setGeometry(QRect(320, 30, 81, 91))
-        self.dial.setMaximum(100)
+        self.dial.setMaximum(255)
         self.progressBar = QProgressBar(self.centralwidget)
         self.progressBar.setObjectName(u"progressBar")
         self.progressBar.setGeometry(QRect(80, 190, 331, 23))

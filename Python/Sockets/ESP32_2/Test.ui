@@ -37,7 +37,7 @@
      </rect>
     </property>
     <property name="maximum">
-     <number>100</number>
+     <number>255</number>
     </property>
    </widget>
    <widget class="QProgressBar" name="progressBar">
