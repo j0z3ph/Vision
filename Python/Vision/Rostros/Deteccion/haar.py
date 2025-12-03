@@ -1,7 +1,7 @@
 import cv2
 import os
 
-capture = cv2.VideoCapture(1)
+capture = cv2.VideoCapture(0)
 file_dir = os.path.dirname(os.path.realpath(__file__))
 # load haar cascade
 haarCascade = 'haarcascade_frontalface_default.xml'  

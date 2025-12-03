@@ -7,8 +7,8 @@ GREEN = (0, 255, 0)
 
 video_cap = cv2.VideoCapture(0)
 
-model = YOLO("dr.strange.pt")
-#model = YOLO("yolov8s.pt")
+#model = YOLO("dr.strange.pt")
+model = YOLO("yolov8s.pt")
 #model = YOLO("best.pt")
 names = model.names
 
