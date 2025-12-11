@@ -39,7 +39,7 @@ void subscription_callback(const void * msgin)
 
 void setup() {
   Serial.begin(115200);
-  set_microros_wifi_transports("AX3.Network", "40705962-3.xx", "192.168.0.181", 8888);
+  set_microros_wifi_transports("ElNombreDeTuRed", "LaContrasenia", "LaIPDeLaComputadoraConROS", 8888);
   
   pinMode(LED_PIN, OUTPUT);
   pinMode(ANALOG_IN, INPUT);
