@@ -2,13 +2,14 @@ import datetime
 from ultralytics import YOLO
 import cv2
 
-CONFIDENCE_THRESHOLD = 0.9
+CONFIDENCE_THRESHOLD = 0.5
 GREEN = (0, 255, 0)
 
 video_cap = cv2.VideoCapture(0)
 
 #model = YOLO("dr.strange.pt")
-model = YOLO("yolov8s.pt")
+model = YOLO("yolov8n.pt")
+#model = YOLO("yolo26n.pt")
 #model = YOLO("best.pt")
 names = model.names
 
