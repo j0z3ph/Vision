@@ -46,7 +46,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.encendido = False
         self.btnLed.clicked.connect(self.digital_write)
         self.dial.valueChanged.connect(self.analog_write)
-        self.analogInThread = ThreadSocket("3.149.222.108", 80)
+        self.analogInThread = ThreadSocket("3.17.89.229", 80)
         self.analogInThread.analog_read.connect(self.analog_read)
         self.analogInThread.start()
     
@@ -55,15 +55,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def analog_write(self):
         value = self.dial.value()
-        server.send(bytes('<analog_write>' + str(value), 'utf-8'))
+        server.send(bytes('<analog_write>' + str(value) + '\n', 'utf-8'))
         
     def digital_write(self):
         if(self.encendido):
-            server.send(bytes('<digital_write>off', 'utf-8'))
+            server.send(bytes('<digital_write>off\n', 'utf-8'))
             self.btnLed.setText("Prender")
             self.encendido = False
         else:
-            server.send(bytes('<digital_write>on', 'utf-8'))
+            server.send(bytes('<digital_write>on\n', 'utf-8'))
             self.btnLed.setText("Apagar")
             self.encendido = True
         

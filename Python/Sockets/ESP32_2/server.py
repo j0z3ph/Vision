@@ -9,15 +9,20 @@ class Cliente:
 def clientthread(conn, addr):
     while True:
         try:
+            buffer = b""
             message = conn.recv(BUFFER_SIZE)
             if message:
-                msg = message.decode('utf-8')
-                print(f"<{addr[0]}> {msg}")
-                # Mensajes especiales (comandos)
-                if msg.startswith('<name>'):
-                    setName(conn, msg.removeprefix('<name>'))
-                else:
-                    broadcast(msg + '\n', conn)
+                buffer += message
+                while b"\n" in buffer:
+                    message, _, remainder = buffer.partition(b"\n")
+                    buffer = remainder
+                    msg = message.decode('utf-8')
+                    print(f"<{addr[0]}> {msg}")
+                    # Mensajes especiales (comandos)
+                    if msg.startswith('<name>'):
+                        setName(conn, msg.removeprefix('<name>'))
+                    else:
+                        broadcast(msg + '\n', conn)
             else:
                 remove(conn)
         except:
