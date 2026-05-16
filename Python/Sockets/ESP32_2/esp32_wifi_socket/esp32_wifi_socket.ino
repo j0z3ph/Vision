@@ -13,7 +13,7 @@ const char* ssid = "Wi-Fi IPN";
 const char* password = "";
 
 const uint port = 80;
-const char* ip = "3.149.222.108";
+const char* ip = "3.17.89.229";
 
 
 void setup() {
@@ -79,7 +79,7 @@ void Task1code(void* pvParameters) {
     if (localClient.connected()) {
       analogread = analogRead(ANALOG_IN_PORT);
       Serial.println(analogread);
-      localClient.print("<analog_read>" + String(analogread));
+      localClient.println("<analog_read>" + String(analogread));
     }
     delay(100);
   }
