@@ -8,12 +8,12 @@ model = build_sam3_image_model()
 processor = Sam3Processor(model, confidence_threshold=0.5)
 
 # Load and process an image
-image = Image.open("b.png")
-opencvimg = cv2.imread("b.png")
+image = Image.open("a.jpeg")
+opencvimg = cv2.imread("a.jpeg")
 state = processor.set_image(image)
 
 # Segment with text prompt
-state = processor.set_text_prompt("orange ball", state)
+state = processor.set_text_prompt("white horse", state)
 
 # Access results
 masks = state["masks"]       # Binary segmentation masks
