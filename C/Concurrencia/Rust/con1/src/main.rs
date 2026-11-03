@@ -1,18 +1,25 @@
-use std::thread;
+use nix::sys::wait::wait;
+use nix::unistd::{fork, ForkResult};
 use std::process;
-use std::time;
-
-fn get_proc() {
-    println!("{:?}", thread::current().id());
-    println!("{}", process::id());
-    //println!("{}", gettid::gettid().to_string());
-    std::thread::sleep(time::Duration::new(1,0));
-}   
 
 fn main() {
-    let thread1 = thread::spawn(|| { get_proc(); }); 
-    let thread2 = thread::spawn(|| { get_proc(); }); 
-    get_proc();
-    thread1.join().unwrap();
-    thread2.join().unwrap();
+
+    let mut contador = 10; 
+
+    println!("[{}] Proceso padre: {}", process::id(), contador);
+
+    match unsafe { fork() } {
+        Ok(ForkResult::Child) => {
+            // Proceso hijo
+            contador = 67; 
+            println!("[{}] Proceso hijo: {}", process::id(), contador);
+        }
+        Ok(ForkResult::Parent { .. }) => {
+            let _ = wait(); // Espera a que el proceso hijo termine
+            println!("[{}] Proceso padre: {}", process::id(), contador);
+        }
+        Err(_) => {
+            println!("Error al crear el proceso.");
+        }
+    }
 }
