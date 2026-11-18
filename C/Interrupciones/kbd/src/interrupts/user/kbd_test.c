@@ -26,8 +26,6 @@
 int main(void) {
     int fd;
     ssize_t ret;
-    off_t offset;
-    const char *msg = "Hola kernel";
     char buf[64] = {0};
 
     /* Device open */
