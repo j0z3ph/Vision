@@ -164,7 +164,7 @@ class MLP:
         # print("bias2: ", self.umbral2)
 
     def clasificar(self, entrada):
-        return int(self.propagacion_adelante([entrada]) > 0.5)
+        return int((self.propagacion_adelante([entrada])).item() > 0.5)
 
     def activacion(self, valor):
         # Funcion sigmoide
